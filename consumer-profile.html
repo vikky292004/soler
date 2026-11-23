@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>My Profile — SolarTrack Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="consumer-sidebar.css" />
+    <style>
+        :root {
+            --sb-w: 64px;
+            --sb-expanded: 260px;
+            --green: #00C853;
+            --green2: #00b96b;
+            --navy: #0B1F3A;
+            --gold: #FFC107;
+            --red: #ef4444;
+            --border: rgba(255, 255, 255, .08);
+            --ease: cubic-bezier(.4, 0, .2, 1);
+        }
+
+        body {
+            animation: fade-in .4s ease
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        /* ── SIDEBAR & TOPBAR styles now shared via consumer-sidebar.css ── */
+
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .pg-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #fff
+        }
+
+        .pg-bc {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .3);
+            margin-top: 1px
+        }
+
+        .hbg {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4.5px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .08);
+            cursor: pointer;
+            transition: all .2s;
+            flex-shrink: 0
+        }
+
+        .hbg:hover {
+            background: rgba(0, 200, 83, .14);
+            border-color: rgba(0, 200, 83, .3)
+        }
+
+        .hbg span {
+            display: block;
+            width: 16px;
+            height: 2px;
+            background: rgba(255, 255, 255, .55);
+            border-radius: 2px;
+            transition: all .28s
+        }
+
+        .hbg.open span:nth-child(1) {
+            transform: translateY(6.5px) rotate(45deg);
+            background: var(--green)
+        }
+
+        .hbg.open span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0)
+        }
+
+        .hbg.open span:nth-child(3) {
+            transform: translateY(-6.5px) rotate(-45deg);
+            background: var(--green)
+        }
+
+        .tb-logout {
+            padding: 7px 16px;
+            border-radius: 8px;
+            background: rgba(239, 68, 68, .12);
+            border: 1px solid rgba(239, 68, 68, .25);
+            color: #fca5a5;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        .tb-logout:hover {
+            background: rgba(239, 68, 68, .22)
+        }
+
+        .back-btn {
+            padding: 7px 16px;
+            border-radius: 8px;
+            background: rgba(0, 200, 83, .1);
+            border: 1px solid rgba(0, 200, 83, .25);
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 200, 83, .2)
+        }
+
+        /* ── PAGE BODY ── */
+        .page-body {
+            padding: 28px;
+            flex: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%
+        }
+
+        .section-hd {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            margin-bottom: 18px
+        }
+
+        .section-hd::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, .07)
+        }
+
+        /* ── PROFILE HERO ── */
+        .profile-hero {
+            background: linear-gradient(135deg, rgba(0, 200, 83, .08), rgba(26, 111, 212, .06));
+            border: 1px solid rgba(0, 200, 83, .15);
+            border-radius: 18px;
+            padding: 28px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 28px;
+            flex-wrap: wrap
+        }
+
+        .avatar-wrap {
+            position: relative;
+            flex-shrink: 0
+        }
+
+        .avatar-circle {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00C853, #1a6fd4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            border: 3px solid rgba(0, 200, 83, .4);
+            box-shadow: 0 0 28px rgba(0, 200, 83, .25);
+            cursor: pointer;
+            transition: all .3s
+        }
+
+        .avatar-circle:hover {
+            transform: scale(1.06);
+            box-shadow: 0 0 40px rgba(0, 200, 83, .4)
+        }
+
+        .avatar-edit {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            cursor: pointer;
+            border: 2px solid #0a1a2e;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .4)
+        }
+
+        .ph-name {
+            font-size: 22px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 4px
+        }
+
+        .ph-snum {
+            font-size: 12px;
+            color: var(--green);
+            font-weight: 700;
+            font-family: 'Roboto Mono', monospace;
+            margin-bottom: 6px
+        }
+
+        .ph-role {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 200, 83, .12);
+            border: 1px solid rgba(0, 200, 83, .28);
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green)
+        }
+
+        /* ── FORM CARD ── */
+        .card {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 26px;
+            margin-bottom: 22px
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 9px
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px
+        }
+
+        @media(max-width:600px) {
+            .form-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .fg {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .fg.full {
+            grid-column: 1/-1
+        }
+
+        .fg label {
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .4)
+        }
+
+        .fg input,
+        .fg select,
+        .fg textarea {
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 9px;
+            color: #f0f4ff;
+            font-size: 13.5px;
+            font-family: 'Inter', sans-serif;
+            padding: 11px 14px;
+            transition: all .2s;
+            outline: none
+        }
+
+        .fg input:focus,
+        .fg select:focus,
+        .fg textarea:focus {
+            border-color: rgba(0, 200, 83, .55);
+            background: rgba(0, 200, 83, .05);
+            box-shadow: 0 0 0 3px rgba(0, 200, 83, .1)
+        }
+
+        .fg input:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            background: rgba(0, 0, 0, .2)
+        }
+
+        .fg select option {
+            background: #0a1a2e
+        }
+
+        .fg textarea {
+            resize: vertical;
+            min-height: 80px
+        }
+
+        /* ── INFO ROW ── */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px
+        }
+
+        @media(max-width:600px) {
+            .info-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .07);
+            border-radius: 10px;
+            padding: 14px 16px
+        }
+
+        .info-lbl {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            margin-bottom: 5px
+        }
+
+        .info-val {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f0f4ff
+        }
+
+        .info-val.green {
+            color: var(--green)
+        }
+
+        /* ── BUTTONS ── */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 22px
+        }
+
+        .btn-primary {
+            padding: 11px 28px;
+            border-radius: 9px;
+            border: none;
+            background: linear-gradient(135deg, #00C853, #00b96b);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all .25s;
+            box-shadow: 0 3px 16px rgba(0, 200, 83, .35)
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 200, 83, .5)
+        }
+
+        .btn-secondary {
+            padding: 11px 28px;
+            border-radius: 9px;
+            border: 1px solid rgba(255, 255, 255, .15);
+            background: transparent;
+            color: rgba(255, 255, 255, .6);
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, .07)
+        }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            z-index: 9999;
+            max-width: 320px;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all .25s var(--ease);
+            pointer-events: none
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0)
+        }
+
+        .toast-success {
+            background: rgba(0, 200, 83, .97);
+            border: 1px solid #00b96b;
+            color: #fff
+        }
+
+        .toast-error {
+            background: rgba(239, 68, 68, .97);
+            border: 1px solid #ef4444;
+            color: #fff
+        }
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <div style="display:flex">
+        <div id="overlay" onclick="closeMob()"
+            style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.5)"></div>
+
+        <!-- SIDEBAR -->
+        <aside class="csb collapsed" id="csb">
+            <div class="csb-brand">
+                <div class="sb-brand-icon" style="background:none;box-shadow:none;"><img src="logo.png" width="32"
+                        height="32" alt="Logo"></div>
+                <div class="sb-brand-text">
+                    <div class="cb-name">SolarTrack Pro</div>
+                    <div class="cb-sub">TNPDCL Net Metering</div>
+                </div>
+            </div>
+            <div class="csb-user">
+                <div class="csb-av">👤</div>
+                <div class="sb-user-text">
+                    <div class="sb-uname" id="sb-uname">Consumer</div>
+                    <div class="sb-urole">Solar Consumer</div>
+                </div>
+            </div>
+            <nav class="csb-nav">
+                <div class="sb-label">My Dashboard</div>
+                <div class="snav-item" onclick="goTo('dashboard.html')"><span class="sni-icon">🏠</span><span
+                        class="sni-label">Overview</span></div>
+                <div class="sb-label">My Energy</div>
+                <div class="snav-item" onclick="goTo('dashboard.html')"><span class="sni-icon">☀</span><span
+                        class="sni-label">Solar Generation</span></div>
+                <div class="snav-item" onclick="goTo('dashboard.html')"><span class="sni-icon">⚡</span><span
+                        class="sni-label">Grid Export / Import</span></div>
+                <div class="snav-item" onclick="goTo('dashboard.html')"><span class="sni-icon">🔋</span><span
+                        class="sni-label">Battery Status</span></div>
+                <div class="sb-label">Billing</div>
+                <div class="snav-item" onclick="goTo('dashboard.html')"><span class="sni-icon">🧾</span><span
+                        class="sni-label">My Bills</span></div>
+                <div class="sb-label">Account</div>
+                <div class="snav-item active" onclick="goTo('consumer-profile.html')"><span
+                        class="sni-icon">👤</span><span class="sni-label">My Profile</span></div>
+                <div class="snav-item" onclick="goTo('consumer-settings.html')"><span class="sni-icon">⚙</span><span
+                        class="sni-label">Settings</span></div>
+                <div class="snav-item" onclick="authLogout(true)"><span class="sni-icon">🚪</span><span
+                        class="sni-label">Logout</span></div>
+            </nav>
+            <div class="csb-foot">
+                <div class="sb-foot-txt">Tamil Nadu Power Distribution<br>Corporation Ltd. — Solar Division<br><span
+                        id="sb-date" style="color:var(--green);font-weight:600"></span></div>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <div class="cmain sb-col" id="cmain">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="hbg" id="hbg" onclick="toggleSB()"><span></span><span></span><span></span></div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="logo.png" width="36" height="36" alt="Logo"
+                            style="filter: drop-shadow(0 0 8px rgba(0,185,107,0.3)); flex-shrink:0" />
+                        <div>
+                            <div class="pg-title">My Profile</div>
+                            <div class="pg-bc"><a href="index.html" style="color:inherit;text-decoration:none;">Home</a> › Consumer Portal › <a href="consumer-profile.html" style="color:inherit;text-decoration:none;">My Profile</a></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="back-btn" onclick="goTo('dashboard.html')">← Dashboard</button>
+                    <button class="tb-logout" onclick="authLogout(true)">🚪 Logout</button>
+                </div>
+            </header>
+
+            <div class="page-body">
+
+                <!-- PROFILE HERO -->
+                <div class="profile-hero">
+                    <div class="avatar-wrap">
+                        <div class="avatar-circle" id="avatar" onclick="document.getElementById('avatar-input').click()"
+                            title="Click to change photo">👤</div>
+                        <div class="avatar-edit" onclick="document.getElementById('avatar-input').click()">✏</div>
+                        <input type="file" id="avatar-input" accept="image/*" style="display:none"
+                            onchange="handleAvatar(this)" />
+                    </div>
+                    <div>
+                        <div class="ph-name" id="ph-name">Consumer</div>
+                        <div class="ph-snum" id="ph-snum">—</div>
+                        <div class="ph-role">☀ Solar Consumer · Active Net Metering</div>
+                    </div>
+                </div>
+
+                <!-- SOLAR INSTALLATION INFO -->
+                <div class="section-hd">☀ Solar Installation Details</div>
+                <div class="card">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-lbl">Installation Capacity</div>
+                            <div class="info-val green">5 kW Solar PV</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Battery Storage</div>
+                            <div class="info-val green">10 kWh Unit · 74% Charged</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">TNPDCL Connection Type</div>
+                            <div class="info-val">Net Metering (LT Tariff IV)</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Installation Date</div>
+                            <div class="info-val">14 March 2024</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Meter Serial No.</div>
+                            <div class="info-val"
+                                style="font-family:'Roboto Mono',monospace;font-size:12px;color:#5ba8f5">
+                                SM-TN-2024-031401</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Net Metering Status</div>
+                            <div class="info-val green">✅ Active</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EDIT PROFILE FORM -->
+                <div class="section-hd">👤 Personal Information</div>
+                <div class="card">
+                    <div class="card-title">✏ Edit Profile</div>
+                    <form id="profile-form" onsubmit="saveProfile(event)">
+                        <div class="form-grid">
+                            <div class="fg"><label>Full Name</label><input type="text" id="f-name"
+                                    placeholder="Your full name" required /></div>
+                            <div class="fg"><label>Consumer ID</label><input type="text" id="f-cid" disabled
+                                    style="font-family:'Roboto Mono',monospace;font-size:12px" /></div>
+                            <div class="fg"><label>Email Address</label><input type="email" id="f-email"
+                                    placeholder="you@example.com" /></div>
+                            <div class="fg"><label>Mobile Number</label><input type="tel" id="f-phone"
+                                    placeholder="+91 98xxx xxxxx" maxlength="13" /></div>
+                            <div class="fg full"><label>Service Address</label><textarea id="f-addr"
+                                    placeholder="Your registered address with TNPDCL..."></textarea></div>
+                            <div class="fg"><label>TNPDCL Section</label>
+                                <select id="f-section">
+                                    <option>Chennai North Circle</option>
+                                    <option>Chennai South Circle</option>
+                                    <option>Madurai Circle</option>
+                                    <option>Coimbatore Circle</option>
+                                    <option>Trichy Circle</option>
+                                    <option>Salem Circle</option>
+                                </select>
+                            </div>
+                            <div class="fg"><label>Alternate Contact</label><input type="text" id="f-alt"
+                                    placeholder="Alternate phone / email" /></div>
+                        </div>
+                        <div class="btn-row">
+                            <button type="submit" class="btn-primary">💾 Save Changes</button>
+                            <button type="button" class="btn-secondary" onclick="resetForm()">↺ Reset</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ACCOUNT SECURITY -->
+                <div class="section-hd">🔐 Account Security</div>
+                <div class="card">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-lbl">Username</div>
+                            <div class="info-val" id="acc-username"
+                                style="font-family:'Roboto Mono',monospace;font-size:13px;color:#5ba8f5">—</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Account Role</div>
+                            <div class="info-val">Consumer</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Last Login</div>
+                            <div class="info-val" id="acc-login" style="font-size:12px">—</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Session Status</div>
+                            <div class="info-val green">✅ Active</div>
+                        </div>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn-secondary" onclick="goTo('consumer-settings.html')">⚙ Go to Settings
+                            →</button>
+                    </div>
+                </div>
+
+            </div>
+        </div><!-- /cmain -->
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+    <script>
+        /* ── Role guard ── */
+        let SESSION;
+        try { SESSION = requireAuth('consumer'); }
+        catch (e) { SESSION = null; }
+
+        /* ── Populate from session ── */
+        if (SESSION) {
+            document.getElementById('sb-uname').textContent = SESSION.name;
+            document.getElementById('ph-name').textContent = SESSION.name;
+            document.getElementById('ph-snum').textContent = SESSION.serviceNumber;
+            document.getElementById('acc-username').textContent = SESSION.username;
+            document.getElementById('acc-login').textContent = new Date(SESSION.loginAt || Date.now()).toLocaleString('en-IN');
+            // Pre-fill form
+            document.getElementById('f-name').value = SESSION.name;
+            document.getElementById('f-cid').value = SESSION.serviceNumber;
+            // Load saved profile data
+            const saved = JSON.parse(localStorage.getItem('solar_profile_' + SESSION.username) || '{}');
+            if (saved.email) document.getElementById('f-email').value = saved.email;
+            if (saved.phone) document.getElementById('f-phone').value = saved.phone;
+            if (saved.addr) document.getElementById('f-addr').value = saved.addr;
+            if (saved.alt) document.getElementById('f-alt').value = saved.alt;
+            if (saved.section) { const s = document.getElementById('f-section');[...s.options].forEach((o, i) => { if (o.text.includes(saved.section)) s.selectedIndex = i; }); }
+            if (saved.avatar) document.getElementById('avatar').style.backgroundImage = `url(${saved.avatar})`;
+        }
+
+        /* ── Sidebar ── */
+        const csb = document.getElementById('csb'), cmain = document.getElementById('cmain'), hbg = document.getElementById('hbg'), ov = document.getElementById('overlay');
+        let sbOpen = false;
+        const mob = () => window.innerWidth <= 768;
+        function toggleSB() { if (mob()) { sbOpen = !sbOpen; csb.classList.toggle('mob-open', sbOpen); ov.style.display = sbOpen ? 'block' : 'none'; csb.classList.remove('collapsed'); hbg.classList.toggle('open', sbOpen); } else { sbOpen = !sbOpen; csb.classList.toggle('collapsed', !sbOpen); cmain.classList.toggle('sb-col', !sbOpen); hbg.classList.toggle('open', sbOpen); } }
+        function closeMob() { sbOpen = false; csb.classList.remove('mob-open'); ov.style.display = 'none'; hbg.classList.remove('open'); }
+        function goTo(url) { document.body.style.transition = 'opacity .3s'; document.body.style.opacity = '0'; setTimeout(() => window.location.href = url, 320); }
+
+        /* ── Date ── */
+        setInterval(() => { document.getElementById('sb-date').textContent = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }, 1000);
+        document.getElementById('sb-date').textContent = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        /* ── Save profile ── */
+        function saveProfile(e) {
+            e.preventDefault();
+            if (!SESSION) return;
+            const data = {
+                email: document.getElementById('f-email').value,
+                phone: document.getElementById('f-phone').value,
+                addr: document.getElementById('f-addr').value,
+                alt: document.getElementById('f-alt').value,
+                section: document.getElementById('f-section').value,
+            };
+            localStorage.setItem('solar_profile_' + SESSION.username, JSON.stringify(data));
+            toast('✅ Profile saved successfully!', 'success');
+        }
+        function resetForm() {
+            if (SESSION) { document.getElementById('f-email').value = ''; document.getElementById('f-phone').value = ''; document.getElementById('f-addr').value = ''; document.getElementById('f-alt').value = ''; }
+            toast('Form reset.', 'success');
+        }
+
+        /* ── Avatar upload ── */
+        function handleAvatar(input) {
+            const file = input.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const av = document.getElementById('avatar');
+                av.textContent = '';
+                av.style.backgroundImage = `url(${e.target.result})`;
+                av.style.backgroundSize = 'cover'; av.style.backgroundPosition = 'center';
+                if (SESSION) { const d = JSON.parse(localStorage.getItem('solar_profile_' + SESSION.username) || '{}'); d.avatar = e.target.result; localStorage.setItem('solar_profile_' + SESSION.username, JSON.stringify(d)); }
+                toast('✅ Photo updated!', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /* ── Toast ── */
+        function toast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.className = `toast toast-${type} show`;
+            setTimeout(() => t.classList.remove('show'), 3200);
+        }
+    </script>
+</body>
+
+</html>

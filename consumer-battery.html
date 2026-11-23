@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Battery Status — SolarTrack Pro</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;600&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="consumer-sidebar.css" />
+    <style>
+        :root {
+            --green: #00C853;
+            --gold: #FFC107;
+            --sb-w: 64px;
+            --sb-expanded: 260px;
+            --ease: cubic-bezier(.4, 0, .2, 1)
+        }
+
+        body {
+            animation: fi .4s ease
+        }
+
+        @keyframes fi {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        /* ── SIDEBAR & TOPBAR styles now shared via consumer-sidebar.css ── */
+
+
+        .page-body {
+            padding: 24px;
+            flex: 1
+        }
+
+        .section-hd {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            margin-bottom: 16px
+        }
+
+        .section-hd::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, .07)
+        }
+
+        /* BATTERY VISUAL */
+        .bat-hero {
+            background: linear-gradient(135deg, rgba(255, 193, 7, .06), rgba(0, 200, 83, .04));
+            border: 1px solid rgba(255, 193, 7, .2);
+            border-radius: 18px;
+            padding: 32px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 32px;
+            align-items: center;
+            flex-wrap: wrap
+        }
+
+        .bat-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0
+        }
+
+        .bat-body {
+            width: 100px;
+            height: 180px;
+            border: 3px solid rgba(255, 193, 7, .5);
+            border-radius: 10px;
+            position: relative;
+            background: rgba(0, 0, 0, .3);
+            overflow: hidden
+        }
+
+        .bat-top {
+            width: 36px;
+            height: 10px;
+            background: rgba(255, 193, 7, .4);
+            border-radius: 4px 4px 0 0;
+            margin: 0 auto;
+            margin-bottom: -3px;
+            position: relative;
+            z-index: 1
+        }
+
+        .bat-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            transition: height 1.5s ease;
+            border-radius: 0 0 7px 7px
+        }
+
+        .bat-fill-green {
+            background: linear-gradient(180deg, #00b96b, #00C853)
+        }
+
+        .bat-fill-yellow {
+            background: linear-gradient(180deg, #f97316, #FFC107)
+        }
+
+        .bat-fill-red {
+            background: linear-gradient(180deg, #dc2626, #ef4444)
+        }
+
+        .bat-pct-ctr {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+            z-index: 2
+        }
+
+        .bat-bolt {
+            font-size: 28px;
+            animation: pulse 1.8s ease-in-out infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .5
+            }
+        }
+
+        .bat-info {
+            flex: 1;
+            min-width: 220px
+        }
+
+        .bat-name {
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 6px
+        }
+
+        .bat-sn {
+            font-size: 11px;
+            color: var(--green);
+            font-family: 'Roboto Mono', monospace;
+            margin-bottom: 16px
+        }
+
+        .bat-stat-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 14px
+        }
+
+        .bat-stat {
+            background: rgba(0, 0, 0, .25);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 9px;
+            padding: 10px 14px;
+            flex: 1;
+            min-width: 110px
+        }
+
+        .bat-stat-lbl {
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            margin-bottom: 4px
+        }
+
+        .bat-stat-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: #f0f4ff
+        }
+
+        .bat-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700
+        }
+
+        .status-charging {
+            background: rgba(0, 200, 83, .15);
+            color: #00C853;
+            border: 1px solid rgba(0, 200, 83, .35)
+        }
+
+        .status-full {
+            background: rgba(255, 193, 7, .12);
+            color: #FFC107;
+            border: 1px solid rgba(255, 193, 7, .3)
+        }
+
+        .status-discharging {
+            background: rgba(239, 68, 68, .12);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, .25)
+        }
+
+        /* Overflow card */
+        .overflow-card {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid rgba(255, 193, 7, .2);
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 24px
+        }
+
+        .oc-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #FFC107;
+            margin-bottom: 14px
+        }
+
+        .oc-bar-bg {
+            background: rgba(255, 255, 255, .07);
+            border-radius: 8px;
+            height: 10px;
+            overflow: hidden;
+            margin: 8px 0
+        }
+
+        .oc-bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #00C853, #FFC107, #ef4444);
+            transition: width 1s ease
+        }
+
+        /* Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .sc {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            padding: 18px;
+            transition: all .3s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .sc:hover {
+            transform: translateY(-3px)
+        }
+
+        .sc::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 14px 14px 0 0
+        }
+
+        .sc-gold::before {
+            background: linear-gradient(90deg, #FFC107, #f97316)
+        }
+
+        .sc-green::before {
+            background: linear-gradient(90deg, #00C853, #00b96b)
+        }
+
+        .sc-blue::before {
+            background: linear-gradient(90deg, #1a6fd4, #5ba8f5)
+        }
+
+        .sc-red::before {
+            background: linear-gradient(90deg, #ef4444, #dc2626)
+        }
+
+        .sc-icon {
+            font-size: 20px;
+            margin-bottom: 8px
+        }
+
+        .sc-val {
+            font-size: 22px;
+            font-weight: 900;
+            line-height: 1
+        }
+
+        .sc-gold .sc-val {
+            color: #FFC107
+        }
+
+        .sc-green .sc-val {
+            color: #00C853
+        }
+
+        .sc-blue .sc-val {
+            color: #5ba8f5
+        }
+
+        .sc-red .sc-val {
+            color: #f87171
+        }
+
+        .sc-lbl {
+            font-size: 11px;
+            color: rgba(255, 255, 255, .4);
+            margin-top: 5px
+        }
+
+        .panel {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 24px
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 16px
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 200px
+        }
+
+        /* Overflow log table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px
+        }
+
+        th {
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, .07)
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, .04);
+            color: rgba(255, 255, 255, .7)
+        }
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <div style="display:flex">
+        <div id="overlay" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.5)"></div>
+        <aside class="csb collapsed" id="csb"></aside>
+        <div class="cmain sb-col" id="cmain">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="hbg" id="hbg"><span></span><span></span><span></span></div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="logo.png" width="36" height="36" alt="Logo"
+                            style="filter: drop-shadow(0 0 8px rgba(0,185,107,0.3)); flex-shrink:0" />
+                        <div>
+                            <div class="pg-title">🔋 Battery Status</div>
+                            <div class="pg-bc"><a href="index.html" style="color:inherit;text-decoration:none;">Home</a> › My Energy › <a href="consumer-battery.html" style="color:inherit;text-decoration:none;">Battery Status</a></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="tb-logout" onclick="authLogout(true)">🚪 Logout</button>
+                </div>
+            </header>
+            <div class="page-body">
+
+                <!-- Main Battery Display -->
+                <div class="section-hd">🔋 10 kWh Home Battery Unit</div>
+                <div class="bat-hero">
+                    <div class="bat-visual">
+                        <div class="bat-top"></div>
+                        <div class="bat-body">
+                            <div class="bat-fill bat-fill-green" id="bat-fill" style="height:74%"></div>
+                            <div class="bat-pct-ctr" id="bat-pct-ctr">74%</div>
+                        </div>
+                        <div class="bat-bolt" id="bat-bolt">⚡</div>
+                    </div>
+                    <div class="bat-info">
+                        <div class="bat-name">🔋 Home Battery — 10 kWh Unit</div>
+                        <div class="bat-sn">SN: TNBT-0042-B · Sector 7, T. Nagar</div>
+                        <div class="bat-stat-row">
+                            <div class="bat-stat">
+                                <div class="bat-stat-lbl">Stored Energy</div>
+                                <div class="bat-stat-val" id="bat-kwh" style="color:#FFC107">7.4 kWh</div>
+                            </div>
+                            <div class="bat-stat">
+                                <div class="bat-stat-lbl">Total Capacity</div>
+                                <div class="bat-stat-val">10 kWh</div>
+                            </div>
+                            <div class="bat-stat">
+                                <div class="bat-stat-lbl">Charge Rate</div>
+                                <div class="bat-stat-val" id="bat-rate" style="color:#00C853">2.1 kW</div>
+                            </div>
+                            <div class="bat-stat">
+                                <div class="bat-stat-lbl">Est. Full In</div>
+                                <div class="bat-stat-val" id="bat-eta">1h 14m</div>
+                            </div>
+                        </div>
+                        <div class="bat-status-badge" id="bat-badge" class="status-charging">⚡ Charging from Solar</div>
+                        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:10px" id="bat-note">Battery
+                            charges from surplus solar generation before selling to EB grid.</div>
+                    </div>
+                </div>
+
+                <!-- Overflow Protection -->
+                <div class="section-hd">🛡 Overflow Protection Status</div>
+                <div class="overflow-card">
+                    <div class="oc-title">⚠ Overflow Guard — 10 kWh Max Fill</div>
+                    <div
+                        style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px">
+                        <span>Current: <span id="oc-cur" style="color:#FFC107;font-weight:700">7.4
+                                kWh</span></span><span>Max: 10 kWh</span>
+                    </div>
+                    <div class="oc-bar-bg">
+                        <div class="oc-bar-fill" id="oc-fill" style="width:74%"></div>
+                    </div>
+                    <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:8px">When battery reaches 10 kWh,
+                        surplus energy is automatically sold to the EB grid. <span
+                            style="color:#00C853;font-weight:600">Overflow protection is active.</span></div>
+                </div>
+
+                <!-- Stat cards -->
+                <div class="section-hd">📊 Battery Statistics</div>
+                <div class="cards-grid">
+                    <div class="sc sc-gold">
+                        <div class="sc-icon">⚡</div>
+                        <div class="sc-val" id="sc-pct">74%</div>
+                        <div class="sc-lbl">Charge Level</div>
+                    </div>
+                    <div class="sc sc-green">
+                        <div class="sc-icon">☀</div>
+                        <div class="sc-val" id="sc-charged">+2.1 kW</div>
+                        <div class="sc-lbl">Charging Rate</div>
+                    </div>
+                    <div class="sc sc-blue">
+                        <div class="sc-icon">🌙</div>
+                        <div class="sc-val">~5.2 kWh</div>
+                        <div class="sc-lbl">Night Discharge Est.</div>
+                    </div>
+                    <div class="sc sc-red">
+                        <div class="sc-icon">⚠</div>
+                        <div class="sc-val" id="sc-overflow">3</div>
+                        <div class="sc-lbl">Overflow Events (Feb)</div>
+                    </div>
+                </div>
+
+                <!-- Charge history chart -->
+                <div class="section-hd">📈 Battery Level — Last 14 Days</div>
+                <div class="panel">
+                    <div class="chart-wrap"><canvas id="ch-bat"></canvas></div>
+                </div>
+
+                <!-- Overflow log -->
+                <div class="section-hd">📋 Overflow Event Log</div>
+                <div class="panel">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Level Reached</th>
+                                <th>Energy Diverted to EB</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="overflow-tbody"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+    <script src="energy.js"></script>
+    <script src="consumer-nav.js"></script>
+    <script>
+        let SESSION;
+        try { SESSION = requireAuth('consumer'); } catch (e) { SESSION = null; }
+        document.addEventListener('DOMContentLoaded', () => { buildConsumerSidebar('battery'); initSidebarToggle(); });
+
+        // Simulate real-time battery level
+        const BASE_PCT = 74;
+        let currentPct = BASE_PCT;
+        function updateBattery(pct) {
+            const kwh = (pct / 100 * 10).toFixed(1);
+            const fill = document.getElementById('bat-fill');
+            const pctEl = document.getElementById('bat-pct-ctr');
+            document.getElementById('bat-kwh').textContent = kwh + ' kWh';
+            document.getElementById('oc-cur').textContent = kwh + ' kWh';
+            document.getElementById('oc-fill').style.width = pct + '%';
+            document.getElementById('sc-pct').textContent = pct.toFixed(1) + '%';
+            pctEl.textContent = pct.toFixed(0) + '%';
+            fill.style.height = pct + '%';
+            const cls = pct >= 85 ? 'bat-fill-green' : pct >= 40 ? 'bat-fill-yellow' : 'bat-fill-red';
+            fill.className = 'bat-fill ' + cls;
+            const badge = document.getElementById('bat-badge');
+            if (pct >= 100) {
+                badge.className = 'bat-status-badge status-full';
+                badge.textContent = '✅ Full — Overflow Protection Active';
+                document.getElementById('bat-rate').textContent = '0 kW';
+                document.getElementById('bat-eta').textContent = 'Full';
+                document.getElementById('bat-note').textContent = 'Battery is full. All surplus solar energy is being sold to the EB grid.';
+                document.getElementById('bat-bolt').style.animation = 'none';
+            } else if (pct > BASE_PCT) {
+                badge.className = 'bat-status-badge status-charging';
+                badge.textContent = '⚡ Charging from Solar';
+            } else {
+                badge.className = 'bat-status-badge status-discharging';
+                badge.textContent = '🌙 Discharging (Home Use)';
+                document.getElementById('bat-rate').textContent = '-0.8 kW';
+                document.getElementById('bat-eta').textContent = 'Discharging';
+            }
+        }
+        updateBattery(currentPct);
+
+        // Animate battery slowly increasing (simulates solar charging)
+        const interval = setInterval(() => {
+            if (currentPct < 100) { currentPct = Math.min(100, currentPct + 0.1); updateBattery(currentPct); }
+            else clearInterval(interval);
+        }, 1200);
+
+        // Chart
+        const days14 = ENERGY.getLastNDays(SESSION ? SESSION.username : 'guest', 14);
+        const batLevels = days14.map((d, i) => {
+            const seed = i + 42;
+            return +((55 + (seed * 7919) % 45)).toFixed(1);
+        });
+        const CO = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: 'rgba(255,255,255,.35)', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.04)' } }, y: { ticks: { color: 'rgba(255,255,255,.35)', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true, max: 100, title: { display: true, text: 'Charge %', color: 'rgba(255,255,255,.3)', font: { size: 9 } } } } };
+        new Chart(document.getElementById('ch-bat'), { type: 'line', data: { labels: days14.map(d => d.date.slice(5)), datasets: [{ data: batLevels, borderColor: '#FFC107', backgroundColor: 'rgba(255,193,7,.12)', borderWidth: 2.5, pointBackgroundColor: '#FFC107', pointRadius: 3, tension: .4, fill: true }] }, options: CO });
+
+        // Overflow log
+        const OVERFLOWS = [
+            { dt: '26 Feb 2026', tm: '14:32', level: '10.0 kWh', diverted: '1.2 kWh', dur: '48 min', st: 'resolved' },
+            { dt: '18 Feb 2026', tm: '13:55', level: '10.0 kWh', diverted: '0.8 kWh', dur: '32 min', st: 'resolved' },
+            { dt: '09 Feb 2026', tm: '14:10', level: '10.0 kWh', diverted: '1.5 kWh', dur: '60 min', st: 'resolved' },
+            { dt: '31 Jan 2026', tm: '13:42', level: '10.0 kWh', diverted: '0.6 kWh', dur: '24 min', st: 'resolved' },
+        ];
+        const tbody = document.getElementById('overflow-tbody');
+        OVERFLOWS.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td style="color:#f0f4ff">${r.dt}</td><td style="font-family:'Roboto Mono',monospace;font-size:11px">${r.tm}</td>
+    <td style="color:#FFC107;font-weight:700">${r.level}</td><td style="color:#00C853;font-weight:700">${r.diverted}</td>
+    <td>${r.dur}</td><td><span style="background:rgba(0,200,83,.12);color:#00C853;border:1px solid rgba(0,200,83,.25);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700">✅ ${r.st}</span></td>`;
+            tbody.appendChild(tr);
+        });
+    </script>
+</body>
+
+</html>

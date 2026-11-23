@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>TNPDCL – Residential Solar Net Metering Monthly Export Bill</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&family=Roboto:wght@300;400;500;600;700;900&family=Roboto+Mono:wght@400;600&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        /* ══════════════════════════════════════════════
+       RESET & ROOT TOKENS
+    ══════════════════════════════════════════════ */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --purple-deep: #3d1f78;
+            --purple-mid: #5c3d8f;
+            --purple-light: #7b52b8;
+            --purple-pale: #f0eaf8;
+            --purple-border: #c3aee8;
+            --gold-rich: #e8a000;
+            --gold-light: #f7c948;
+            --gold-pale: #fff8e1;
+            --green-dark: #1a6b35;
+            --green-mid: #28a745;
+            --green-pale: #d4f5e2;
+            --blue-dark: #1b5a7a;
+            --blue-pale: #d4e8f5;
+            --orange-dark: #a05a00;
+            --orange-pale: #fff0d4;
+            --red: #c0392b;
+            --text-dark: #1a1a2e;
+            --text-mid: #444;
+            --text-muted: #888;
+            --white: #ffffff;
+            --row-odd: #faf7ff;
+            --row-even: #f4effe;
+        }
+
+        body {
+            background: #b8b8c8;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 30px 10px 60px;
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-dark);
+        }
+
+        /* ══════════════════════════════════════════════
+       A4 PAGE
+    ══════════════════════════════════════════════ */
+        .page {
+            width: 794px;
+            background: #fff;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, .32);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* ══════════════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════════════ */
+        .hdr-gold-top {
+            height: 7px;
+            background: linear-gradient(90deg, var(--gold-light), var(--gold-rich), var(--gold-light));
+        }
+
+        .hdr-main {
+            background: linear-gradient(135deg, var(--purple-deep) 0%, var(--purple-mid) 55%, var(--purple-light) 100%);
+            padding: 16px 26px 14px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* emblem */
+        .emblem {
+            width: 76px;
+            height: 76px;
+            flex-shrink: 0;
+            background: #fff;
+            border-radius: 50%;
+            border: 3px solid var(--gold-light);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, .25), inset 0 0 0 3px var(--purple-pale);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+        }
+
+        .emblem svg {
+            width: 60px;
+            height: 60px;
+        }
+
+        /* center text block */
+        .hdr-center {
+            flex: 1;
+            text-align: center;
+            color: #fff;
+        }
+
+        .hdr-eng {
+            font-size: 9px;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            opacity: .8;
+            margin-bottom: 1px;
+        }
+
+        .hdr-title {
+            font-family: 'Noto Serif', serif;
+            font-size: 18.5px;
+            font-weight: 700;
+            letter-spacing: .4px;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, .3);
+            line-height: 1.2;
+        }
+
+        .hdr-tamil {
+            font-size: 11.5px;
+            opacity: .85;
+            margin-top: 2px;
+            letter-spacing: .4px;
+        }
+
+        .hdr-badge {
+            display: inline-block;
+            margin-top: 7px;
+            background: rgba(255, 255, 255, .15);
+            border: 1px solid rgba(255, 255, 255, .4);
+            border-radius: 20px;
+            padding: 4px 16px;
+            font-size: 10px;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        /* right icon */
+        .hdr-right {
+            flex-shrink: 0;
+            text-align: center;
+        }
+
+        .hdr-right svg {
+            width: 68px;
+            height: 68px;
+        }
+
+        .hdr-right small {
+            display: block;
+            color: var(--gold-light);
+            font-size: 8.5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 3px;
+            font-weight: 700;
+        }
+
+        .hdr-gold-bot {
+            height: 5px;
+            background: linear-gradient(90deg, var(--gold-light), var(--gold-rich), var(--gold-light));
+        }
+
+        /* ── bill title strip ── */
+        .hdr-strip {
+            background: var(--purple-pale);
+            border-bottom: 2px solid var(--purple-mid);
+            padding: 8px 26px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hdr-strip h1 {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: var(--purple-deep);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .hdr-strip-right {
+            text-align: right;
+        }
+
+        .hdr-strip-right .lbl {
+            font-size: 8.5px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .hdr-strip-right .val {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--purple-deep);
+            letter-spacing: .8px;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        /* ══════════════════════════════════════════════
+       BODY
+    ══════════════════════════════════════════════ */
+        .body {
+            padding: 16px 26px;
+        }
+
+        /* ── Section heading pill ── */
+        .sec-head {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--purple-deep);
+            color: #fff;
+            padding: 5px 14px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        /* ══════════  CONSUMER GRID  ══════════ */
+        .consumer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border: 1.5px solid var(--purple-border);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .cg-pair {
+            display: contents;
+        }
+
+        .cg-pair>div {
+            padding: 7px 13px;
+            border-bottom: 1px solid var(--purple-border);
+        }
+
+        .cg-pair:last-child>div {
+            border-bottom: none;
+        }
+
+        .cg-pair:nth-child(odd)>div {
+            background: var(--row-odd);
+        }
+
+        .cg-pair:nth-child(even)>div {
+            background: var(--row-even);
+        }
+
+        .cg-lbl {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: var(--purple-mid);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            border-right: 1.5px solid var(--purple-border);
+        }
+
+        .cg-val {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .cg-val.bold {
+            font-weight: 800;
+            color: var(--purple-deep);
+        }
+
+        .cg-val.mono {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--purple-deep);
+            letter-spacing: .5px;
+        }
+
+        .cg-val.red {
+            color: var(--red);
+            font-weight: 700;
+        }
+
+        hr.dash {
+            border: none;
+            border-top: 1.5px dashed var(--purple-border);
+            margin: 14px 0;
+        }
+
+        /* ══════════  DAILY TABLE  ══════════ */
+        .daily-table-wrap {
+            margin-bottom: 16px;
+            overflow: hidden;
+            border-radius: 6px;
+            border: 1.5px solid var(--purple-border);
+        }
+
+        table.daily-tbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11.5px;
+        }
+
+        table.daily-tbl thead tr {
+            background: linear-gradient(135deg, var(--purple-deep), var(--purple-light));
+        }
+
+        table.daily-tbl thead th {
+            padding: 8px 10px;
+            color: #fff;
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: .9px;
+            text-transform: uppercase;
+            border: 1px solid rgba(255, 255, 255, .18);
+            text-align: center;
+        }
+
+        table.daily-tbl thead th:first-child {
+            text-align: left;
+        }
+
+        table.daily-tbl tbody tr {
+            border-bottom: 1px solid #e6dbf5;
+        }
+
+        table.daily-tbl tbody tr:nth-child(odd) {
+            background: var(--row-odd);
+        }
+
+        table.daily-tbl tbody tr:nth-child(even) {
+            background: var(--row-even);
+        }
+
+        table.daily-tbl tbody td {
+            padding: 7.5px 10px;
+            text-align: center;
+            border: 1px solid #e6dbf5;
+        }
+
+        table.daily-tbl tbody td:first-child {
+            text-align: left;
+        }
+
+        table.daily-tbl tbody td.dt-date {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10.5px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        table.daily-tbl tbody td.dt-day {
+            font-size: 10.5px;
+            font-weight: 600;
+            color: var(--purple-mid);
+        }
+
+        table.daily-tbl tbody td.gen {
+            color: var(--green-dark);
+            font-weight: 700;
+        }
+
+        table.daily-tbl tbody td.used {
+            color: var(--blue-dark);
+            font-weight: 700;
+        }
+
+        table.daily-tbl tbody td.exp {
+            color: var(--orange-dark);
+            font-weight: 700;
+        }
+
+        /* tfoot totals */
+        table.daily-tbl tfoot tr {
+            background: linear-gradient(90deg, var(--purple-mid), var(--purple-light));
+        }
+
+        table.daily-tbl tfoot td {
+            padding: 8px 10px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 11px;
+            border: 1px solid rgba(255, 255, 255, .18);
+            text-align: center;
+        }
+
+        table.daily-tbl tfoot td:first-child {
+            text-align: left;
+            letter-spacing: .5px;
+        }
+
+        /* ══════════  CALCULATION BLOCK  ══════════ */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .calc-card {
+            border-radius: 8px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border: 1.5px solid;
+        }
+
+        .calc-card.gen {
+            background: var(--green-pale);
+            border-color: #a8e6c0;
+        }
+
+        .calc-card.used {
+            background: var(--blue-pale);
+            border-color: #a8ccdf;
+        }
+
+        .calc-card.exp {
+            background: var(--orange-pale);
+            border-color: #f5c878;
+        }
+
+        .calc-card .ico {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        .calc-card .lbl {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .calc-card.gen .lbl {
+            color: var(--green-dark);
+        }
+
+        .calc-card.used .lbl {
+            color: var(--blue-dark);
+        }
+
+        .calc-card.exp .lbl {
+            color: var(--orange-dark);
+        }
+
+        .calc-card .num {
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .calc-card.gen .num {
+            color: var(--green-dark);
+        }
+
+        .calc-card.used .num {
+            color: var(--blue-dark);
+        }
+
+        .calc-card.exp .num {
+            color: var(--orange-dark);
+        }
+
+        .calc-card .unit {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ── Summary payable box ── */
+        .payable-box {
+            background: linear-gradient(135deg, var(--purple-deep) 0%, var(--purple-light) 100%);
+            border-radius: 8px;
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 18px rgba(92, 61, 143, .35);
+        }
+
+        .payable-left {
+            color: #fff;
+        }
+
+        .payable-left .pl-title {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: .8;
+        }
+
+        .payable-left .pl-formula {
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 4px;
+            opacity: .9;
+        }
+
+        .payable-left .pl-breakdown {
+            font-size: 10px;
+            opacity: .75;
+            margin-top: 2px;
+        }
+
+        .payable-right {
+            text-align: right;
+        }
+
+        .payable-right .pr-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, .75);
+        }
+
+        .payable-right .pr-amount {
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--gold-light);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+            line-height: 1;
+            margin-top: 3px;
+        }
+
+        .payable-right .pr-words {
+            font-size: 9px;
+            color: rgba(255, 255, 255, .75);
+            margin-top: 3px;
+            letter-spacing: .5px;
+        }
+
+        /* ══════════  INFO NOTE  ══════════ */
+        .info-note {
+            background: var(--gold-pale);
+            border-left: 4px solid var(--gold-rich);
+            border-radius: 0 6px 6px 0;
+            padding: 9px 13px;
+            font-size: 10.5px;
+            color: #4a3000;
+            line-height: 1.55;
+            margin-bottom: 14px;
+        }
+
+        .info-note strong {
+            color: #2a1a00;
+        }
+
+        /* ══════════  CHARTS  ══════════ */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .chart-card {
+            border: 1.5px solid var(--purple-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .chart-card-head {
+            background: var(--purple-mid);
+            color: #fff;
+            padding: 6px 12px;
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chart-card-body {
+            padding: 10px 10px 8px;
+            background: var(--row-odd);
+        }
+
+        canvas {
+            width: 100% !important;
+        }
+
+        /* ══════════  BOTTOM PANEL (Payment + QR)  ══════════ */
+        .bottom-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+            align-items: flex-start;
+        }
+
+        /* payment panel */
+        .pay-panel {
+            flex: 1;
+            border: 1.5px solid var(--purple-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .pay-panel-head {
+            background: var(--purple-deep);
+            color: #fff;
+            padding: 6px 13px;
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .pay-panel-body {
+            background: var(--row-odd);
+            padding: 10px 13px;
+        }
+
+        .p-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5.5px 0;
+            border-bottom: 1px dashed #ddd;
+            font-size: 11px;
+        }
+
+        .p-row:last-child {
+            border-bottom: none;
+        }
+
+        .p-row .p-lbl {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .p-row .p-val {
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .p-row .p-val.green {
+            color: var(--green-dark);
+        }
+
+        .p-row .p-val.mono {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10.5px;
+        }
+
+        /* QR panel */
+        .qr-panel {
+            width: 164px;
+            flex-shrink: 0;
+            border: 1.5px solid var(--purple-border);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .qr-panel-head {
+            background: var(--purple-deep);
+            color: #fff;
+            text-align: center;
+            padding: 6px 4px;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .qr-panel-body {
+            background: var(--row-odd);
+            padding: 10px 10px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #qrcode {
+            width: 128px;
+            height: 128px;
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #qrcode canvas,
+        #qrcode img {
+            width: 120px !important;
+            height: 120px !important;
+        }
+
+        .qr-caption {
+            font-size: 8px;
+            color: var(--purple-mid);
+            text-align: center;
+            font-weight: 600;
+            line-height: 1.45;
+            letter-spacing: .2px;
+        }
+
+        .barcode-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            margin-top: 2px;
+        }
+
+        .barcode-strip {
+            display: flex;
+            gap: 1px;
+            height: 26px;
+            align-items: flex-end;
+        }
+
+        .barcode-strip span {
+            display: inline-block;
+            background: var(--text-dark);
+        }
+
+        .barcode-num {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 7px;
+            letter-spacing: 1.5px;
+            color: #333;
+        }
+
+        /* ══════════  SIGNATURES / STAMP  ══════════ */
+        .sig-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 6px;
+            margin-bottom: 10px;
+        }
+
+        .sig-block {
+            text-align: center;
+        }
+
+        .sig-line {
+            width: 155px;
+            border-top: 1.5px solid #555;
+            margin: 0 auto 4px;
+        }
+
+        .sig-block p {
+            font-size: 9.5px;
+            color: #555;
+        }
+
+        .sig-block .sig-name {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-top: 2px;
+        }
+
+        /* Rubber stamp */
+        .stamp {
+            width: 115px;
+            height: 115px;
+            border: 4px solid var(--green-dark);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--green-dark);
+            position: relative;
+            transform: rotate(-10deg);
+            opacity: .82;
+            padding: 8px;
+        }
+
+        .stamp::before {
+            content: '';
+            position: absolute;
+            inset: 5px;
+            border: 1.5px dashed var(--green-dark);
+            border-radius: 50%;
+        }
+
+        .stamp .st-line {
+            font-size: 7.5px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .stamp .st-big {
+            font-size: 14px;
+            font-weight: 900;
+            text-align: center;
+            margin: 2px 0;
+            line-height: 1.1;
+        }
+
+        .stamp .st-sm {
+            font-size: 7px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-align: center;
+        }
+
+        /* ══════════  FOOTER  ══════════ */
+        .ftr {
+            background: linear-gradient(135deg, var(--purple-deep), #6a3aaa);
+        }
+
+        .ftr-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 26px;
+            gap: 14px;
+            color: rgba(255, 255, 255, .85);
+        }
+
+        .ftr-left .ftr-brand {
+            font-size: 11px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: .4px;
+        }
+
+        .ftr-left .ftr-sub {
+            font-size: 9px;
+            color: rgba(255, 255, 255, .7);
+            margin-top: 2px;
+        }
+
+        .ftr-shields {
+            display: flex;
+            gap: 8px;
+        }
+
+        .shield {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, .12);
+            border: 1px solid rgba(255, 255, 255, .25);
+            border-radius: 12px;
+            padding: 3px 9px;
+            font-size: 8.5px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: .5px;
+        }
+
+        .ftr-right {
+            text-align: right;
+            font-size: 9px;
+            color: rgba(255, 255, 255, .7);
+        }
+
+        .ftr-gold {
+            height: 5px;
+            background: linear-gradient(90deg, var(--gold-light), var(--gold-rich), var(--gold-light));
+        }
+
+        /* ══════════  PRINT STYLES  ══════════ */
+        @media print {
+            body {
+                background: none;
+                padding: 0;
+            }
+
+            .page {
+                box-shadow: none;
+                width: 210mm;
+            }
+        }
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <div class="page">
+
+        <!-- ╔════════════════════════════════════╗ -->
+        <!-- ║             HEADER                 ║ -->
+        <!-- ╚════════════════════════════════════╝ -->
+        <div class="hdr-gold-top"></div>
+
+        <div class="hdr-main">
+            <!-- Emblem -->
+            <div class="emblem" style="background:none; border:none; box-shadow:none;">
+                <img src="logo.png" width="76" height="76" alt="Logo" />
+            </div>
+
+            <!-- Center Title -->
+            <div class="hdr-center">
+                <div class="hdr-eng">Government of Tamil Nadu — Energy Department</div>
+                <div class="hdr-title">Tamil Nadu Power Distribution Corporation Limited</div>
+                <div class="hdr-tamil">தமிழ்நாடு மின் விநியோக கழகம் (TNPDCL)</div>
+                <div class="hdr-badge">☀ Residential Solar Net Metering — Monthly Export Bill</div>
+            </div>
+
+            <!-- Right solar graphic -->
+            <div class="hdr-right">
+                <svg viewBox="0 0 68 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="34" cy="34" r="32" fill="rgba(247,201,72,.1)" />
+                    <circle cx="34" cy="34" r="15" fill="#f7c948" stroke="#e8a000" stroke-width="2" />
+                    <!-- rays -->
+                    <line x1="34" y1="4" x2="34" y2="14" stroke="#f7c948" stroke-width="3.5" stroke-linecap="round" />
+                    <line x1="34" y1="54" x2="34" y2="64" stroke="#f7c948" stroke-width="3.5" stroke-linecap="round" />
+                    <line x1="4" y1="34" x2="14" y2="34" stroke="#f7c948" stroke-width="3.5" stroke-linecap="round" />
+                    <line x1="54" y1="34" x2="64" y2="34" stroke="#f7c948" stroke-width="3.5" stroke-linecap="round" />
+                    <line x1="12.2" y1="12.2" x2="19" y2="19" stroke="#f7c948" stroke-width="2.5"
+                        stroke-linecap="round" />
+                    <line x1="49" y1="49" x2="55.8" y2="55.8" stroke="#f7c948" stroke-width="2.5"
+                        stroke-linecap="round" />
+                    <line x1="55.8" y1="12.2" x2="49" y2="19" stroke="#f7c948" stroke-width="2.5"
+                        stroke-linecap="round" />
+                    <line x1="19" y1="49" x2="12.2" y2="55.8" stroke="#f7c948" stroke-width="2.5"
+                        stroke-linecap="round" />
+                    <!-- shine -->
+                    <circle cx="29" cy="29" r="5" fill="rgba(255,255,255,.38)" />
+                </svg>
+                <small>Green Energy</small>
+            </div>
+        </div>
+
+        <div class="hdr-gold-bot"></div>
+
+        <!-- bill title strip -->
+        <div class="hdr-strip">
+            <h1>⚡ Residential Solar Net Metering Monthly Export Bill</h1>
+            <div class="hdr-strip-right">
+                <div class="lbl">Bill ID</div>
+                <div class="val">TN-SOLAR-2026-03-0001</div>
+            </div>
+        </div>
+
+        <!-- ╔════════════════════════════════════╗ -->
+        <!-- ║               BODY                 ║ -->
+        <!-- ╚════════════════════════════════════╝ -->
+        <div class="body">
+
+            <!-- ── CONSUMER DETAILS ── -->
+            <div class="sec-head">👤 Consumer Details</div>
+            <div class="consumer-grid">
+                <div class="cg-pair">
+                    <div class="cg-lbl">Consumer Name</div>
+                    <div class="cg-val bold">V. Akaash vignesh</div>
+                </div>
+                <div class="cg-pair">
+                    <div class="cg-lbl">Service Number</div>
+                    <div class="cg-val mono">200041411025756</div>
+                </div>
+                <div class="cg-pair">
+                    <div class="cg-lbl">Address</div>
+                    <div class="cg-val">Chennai, Tamil Nadu – 600 001</div>
+                </div>
+                <div class="cg-pair">
+                    <div class="cg-lbl">Section / Sub-Division</div>
+                    <div class="cg-val">Anna Nagar Section, Chennai North Circle</div>
+                </div>
+                <div class="cg-pair">
+                    <div class="cg-lbl">Billing Period</div>
+                    <div class="cg-val bold">01-05-2026 to 31-05-2026</div>
+                </div>
+                <div class="cg-pair">
+                    <div class="cg-lbl">Bill Generated Date &amp; Time</div>
+                    <div class="cg-val bold">31-05-2026 &nbsp;|&nbsp; 06:45 PM</div>
+                </div>
+                <div class="cg-pair">
+                    <div class="cg-lbl">Connection Type</div>
+                    <div class="cg-val">LT – Domestic (Solar Net Metering)</div>
+                </div>
+                <div class="cg-pair">
+                    <div class="cg-lbl">Due Date</div>
+                    <div class="cg-val red">15-04-2026</div>
+                </div>
+            </div>
+
+            <hr class="dash" />
+
+            <!-- ── DAILY SOLAR ENERGY REPORT ── -->
+            <div class="sec-head">📋 Daily Solar Energy Report — May 2026</div>
+            <div class="daily-table-wrap">
+                <table class="daily-tbl" id="daily-tbl">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>☀ Solar Generated (kWh)</th>
+                            <th>🏠 Home Used (kWh)</th>
+                            <th>⚡ Exported to EB (kWh)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="daily-tbody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2">📊 Monthly Totals</td>
+                            <td id="tft-gen">—</td>
+                            <td id="tft-used">—</td>
+                            <td id="tft-exp">—</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <hr class="dash" />
+
+            <!-- ── MONTHLY CALCULATION ── -->
+            <div class="sec-head">🔢 Monthly Calculation Summary</div>
+            <div class="calc-grid">
+                <div class="calc-card gen">
+                    <div class="ico">☀️</div>
+                    <div class="lbl">Total Solar Generated</div>
+                    <div class="num">350</div>
+                    <div class="unit">kWh</div>
+                </div>
+                <div class="calc-card used">
+                    <div class="ico">🏠</div>
+                    <div class="lbl">Total Home Consumption</div>
+                    <div class="num">290</div>
+                    <div class="unit">kWh</div>
+                </div>
+                <div class="calc-card exp">
+                    <div class="ico">⚡</div>
+                    <div class="lbl">Total Exported to EB</div>
+                    <div class="num">60</div>
+                    <div class="unit">kWh</div>
+                </div>
+            </div>
+
+            <!-- Amount payable box -->
+            <div class="payable-box">
+                <div class="payable-left">
+                    <div class="pl-title">Tariff Calculation</div>
+                    <div class="pl-formula">Exported Energy × Tariff Rate = Amount Payable</div>
+                    <div class="pl-breakdown">60 kWh × ₹5.00 per kWh = ₹300.00 &nbsp;|&nbsp; Credit Period: April 2026
+                    </div>
+                </div>
+                <div class="payable-right">
+                    <div class="pr-label">Final Amount Payable by EB</div>
+                    <div class="pr-amount">₹ 300.00</div>
+                    <div class="pr-words">Rupees Three Hundred Only</div>
+                </div>
+            </div>
+
+            <!-- Info note -->
+            <div class="info-note">
+                <strong>📌 Official Notice:</strong> This is a digitally generated Solar Net Metering Export Credit Bill
+                issued under the <strong>Tamil Nadu Solar Energy Policy 2019</strong> and <strong>TNERC Net Metering
+                    Regulations 2021</strong>. The credit of <strong>₹300.00</strong> will be adjusted in your next
+                electricity bill or credited to your registered bank account via NACH within <strong>30 working
+                    days</strong>. For queries: <strong>TANGEDCO Helpline 1912</strong> |
+                <strong>www.tnebnet.org</strong>
+            </div>
+
+            <hr class="dash" />
+
+            <!-- ── VISUAL ANALYSIS CHARTS ── -->
+            <div class="sec-head">📊 Visual Energy Analysis — May 2026</div>
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-card-head">☀ Daily Solar Generation (kWh)</div>
+                    <div class="chart-card-body">
+                        <canvas id="chartGen" height="140"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-head">⚡ Daily Export to EB Grid (kWh)</div>
+                    <div class="chart-card-body">
+                        <canvas id="chartExp" height="140"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="dash" />
+
+            <!-- ── PAYMENT + QR ── -->
+            <div class="bottom-row">
+                <!-- Payment Panel -->
+                <div class="pay-panel">
+                    <div class="pay-panel-head">💳 Payment Summary &amp; Settlement Details</div>
+                    <div class="pay-panel-body">
+                        <div class="p-row"><span class="p-lbl">Export Credit Amount</span><span class="p-val green">₹
+                                300.00</span></div>
+                        <div class="p-row"><span class="p-lbl">Previous Outstanding Balance</span><span class="p-val">₹
+                                0.00</span></div>
+                        <div class="p-row"><span class="p-lbl">Tariff Rate Applied</span><span class="p-val">₹ 5.00 /
+                                kWh</span></div>
+                        <div class="p-row"><span class="p-lbl">Net Board Payable Amount</span><span
+                                class="p-val green">₹ 300.00</span></div>
+                        <div class="p-row"><span class="p-lbl">Settlement Mode</span><span class="p-val">Bill Adjustment
+                                / NACH Bank Credit</span></div>
+                        <div class="p-row"><span class="p-lbl">Payment Reference ID</span><span
+                                class="p-val mono">TNPDCL2603310001</span></div>
+                        <div class="p-row"><span class="p-lbl">Registered Mobile No.</span><span class="p-val">+91
+                                9XXXXX6789</span></div>
+                        <div class="p-row"><span class="p-lbl">Meter Serial Number</span><span
+                                class="p-val mono">EM20240803-SNM-CH</span></div>
+                        <div class="p-row"><span class="p-lbl">System Capacity</span><span class="p-val">5 kWp (Roof-top
+                                PV)</span></div>
+                    </div>
+                </div>
+
+                <!-- QR Panel -->
+                <div class="qr-panel">
+                    <div class="qr-panel-head">📱 UPI Pay</div>
+                    <div class="qr-panel-body">
+                        <div id="qrcode"></div>
+                        <div class="qr-caption">Scan with Camera App<br/>UPI: tangedco@sbi</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── SIGNATURE & STAMP ── -->
+            <div class="sig-row">
+                <div class="sig-block">
+                    <div class="sig-line"></div>
+                    <p>Consumer's Signature</p>
+                    <p class="sig-name">V. Akaash</p>
+                </div>
+
+                <div class="stamp">
+                    <div class="st-line">TNPDCL</div>
+                    <div class="st-big">VERIFIED<br />OFFICIAL</div>
+                    <div class="st-sm">Chennai North Circle</div>
+                    <div class="st-sm" style="margin-top:2px;">31–03–2026</div>
+                </div>
+
+                <div class="sig-block">
+                    <div class="sig-line"></div>
+                    <p>Authorized Signatory</p>
+                    <p class="sig-name">Assistant Engineer, TNPDCL</p>
+                </div>
+            </div>
+
+        </div><!-- /body -->
+
+        <!-- ╔════════════════════════════════════╗ -->
+        <!-- ║              FOOTER                ║ -->
+        <!-- ╚════════════════════════════════════╝ -->
+        <div class="ftr">
+            <div class="ftr-inner">
+                <div class="ftr-left">
+                    <div class="ftr-brand">🔆 Digitally Generated Solar Net Metering Statement</div>
+                    <div class="ftr-sub">Authorized Residential Solar Monitoring System &nbsp;|&nbsp; TNPDCL Solar
+                        Division &nbsp;|&nbsp; Helpline: 1912 &nbsp;|&nbsp; www.tnebnet.org</div>
+                    <div class="ftr-shields" style="margin-top:6px;">
+                        <div class="shield">🔒 Tamper Proof</div>
+                        <div class="shield">✅ QR Verified</div>
+                        <div class="shield">📄 ISO 9001</div>
+                    </div>
+                </div>
+                <div class="ftr-right">
+                    <div>Bill Generated: 31-05-2026 &nbsp;|&nbsp; 06:45 PM</div>
+                    <div>Document ID: TNPDCL/SMD/2026/CH/00847</div>
+                    <div style="margin-top:4px;color:#ffe08a;font-size:7.5px;">This is a computer-generated bill. No
+                        physical signature is required for online settlement.</div>
+                </div>
+            </div>
+            <div class="ftr-gold"></div>
+        </div>
+
+    </div><!-- /page -->
+
+    <!-- ════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════ -->
+    <script>
+        /* ─── Daily data ─── */
+        const dailyData = [
+            { date: "01-05-2026", day: "Sunday", gen: 12, used: 9, exp: 3 },
+            { date: "02-05-2026", day: "Monday", gen: 15, used: 10, exp: 5 },
+            { date: "03-05-2026", day: "Tuesday", gen: 14, used: 11, exp: 3 },
+            { date: "04-05-2026", day: "Wednesday", gen: 16, used: 12, exp: 4 },
+            { date: "05-05-2026", day: "Thursday", gen: 13, used: 8, exp: 5 },
+            { date: "06-05-2026", day: "Friday", gen: 17, used: 13, exp: 4 },
+            { date: "07-05-2026", day: "Saturday", gen: 18, used: 14, exp: 4 },
+            { date: "08-05-2026", day: "Sunday", gen: 11, used: 8, exp: 3 },
+            { date: "09-05-2026", day: "Monday", gen: 14, used: 11, exp: 3 },
+            { date: "10-05-2026", day: "Tuesday", gen: 16, used: 13, exp: 3 },
+            { date: "11-05-2026", day: "Wednesday", gen: 15, used: 11, exp: 4 },
+            { date: "12-05-2026", day: "Thursday", gen: 13, used: 9, exp: 4 },
+            { date: "13-05-2026", day: "Friday", gen: 18, used: 14, exp: 4 },
+            { date: "14-05-2026", day: "Saturday", gen: 19, used: 16, exp: 3 },
+            { date: "15-05-2026", day: "Sunday", gen: 10, used: 7, exp: 3 },
+            { date: "16-05-2026", day: "Monday", gen: 14, used: 11, exp: 3 },
+            { date: "17-05-2026", day: "Tuesday", gen: 15, used: 12, exp: 3 },
+            { date: "18-05-2026", day: "Wednesday", gen: 16, used: 13, exp: 3 },
+            { date: "19-05-2026", day: "Thursday", gen: 14, used: 11, exp: 3 },
+            { date: "20-05-2026", day: "Friday", gen: 17, used: 14, exp: 3 },
+        ];
+
+        /* ─── Populate table ─── */
+        const tbody = document.getElementById('daily-tbody');
+        let totGen = 0, totUsed = 0, totExp = 0;
+        dailyData.forEach((r, i) => {
+            totGen += r.gen; totUsed += r.used; totExp += r.exp;
+            tbody.innerHTML += `
+    <tr>
+      <td class="dt-date">${r.date}</td>
+      <td class="dt-day">${r.day}</td>
+      <td class="gen">${r.gen} kWh</td>
+      <td class="used">${r.used} kWh</td>
+      <td class="exp">${r.exp} kWh</td>
+    </tr>`;
+        });
+        document.getElementById('tft-gen').textContent = totGen + ' kWh';
+        document.getElementById('tft-used').textContent = totUsed + ' kWh';
+        document.getElementById('tft-exp').textContent = totExp + ' kWh';
+
+        /* ─── Chart shared options ─── */
+        const chartFont = { family: "'Roboto', sans-serif", size: 9 };
+        const commonOpts = {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(61,31,120,.92)',
+                    titleFont: { ...chartFont, weight: '700', size: 10 },
+                    bodyFont: chartFont,
+                    padding: 8, cornerRadius: 6
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { font: chartFont, color: '#555', maxRotation: 45 },
+                    grid: { display: false }
+                },
+                y: {
+                    ticks: { font: chartFont, color: '#555' },
+                    grid: { color: 'rgba(0,0,0,.07)' },
+                    beginAtZero: true
+                }
+            }
+        };
+
+        const labels = dailyData.map(r => r.date.slice(0, 5));
+
+        /* Chart 1 – Solar Generation */
+        new Chart(document.getElementById('chartGen'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Solar Generated (kWh)',
+                    data: dailyData.map(r => r.gen),
+                    backgroundColor: dailyData.map((_, i) =>
+                        i % 2 === 0 ? 'rgba(247,201,72,.85)' : 'rgba(232,160,0,.85)'),
+                    borderColor: 'rgba(200,130,0,.9)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: { ...commonOpts }
+        });
+
+        /* Chart 2 – Export */
+        new Chart(document.getElementById('chartExp'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Exported to EB (kWh)',
+                    data: dailyData.map(r => r.exp),
+                    backgroundColor: dailyData.map((_, i) =>
+                        i % 2 === 0 ? 'rgba(92,61,143,.85)' : 'rgba(123,82,184,.85)'),
+                    borderColor: 'rgba(61,31,120,.9)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: { ...commonOpts }
+        });
+
+        /* ─── UPI QR Code (tangedco@sbi) ─── */
+        new QRCode(document.getElementById("qrcode"), {
+            text: "upi://pay?pa=tangedco@sbi&pn=TNPDCL%20Net%20Metering&am=300.00&cu=INR&tn=Solar%20Bill%20Payment",
+            width: 120, height: 120,
+            colorDark: "#000000", colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        /* ─── Barcode ─── */
+        const strip = document.getElementById("barcode-strip");
+        const bWidths = [2, 1, 3, 1, 2, 1, 1, 3, 1, 2, 3, 1, 1, 2, 1, 3, 2, 1, 3, 1, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 1, 3, 2, 1, 2, 1, 1, 3, 1, 2, 3, 1, 1, 2, 1, 2, 3, 1, 2, 1];
+        bWidths.forEach((w, i) => {
+            const b = document.createElement("span");
+            b.style.width = w + "px";
+            b.style.height = (i % 6 === 0) ? "26px" : "19px";
+            strip.appendChild(b);
+        });
+    </script>
+
+</body>
+
+</html>

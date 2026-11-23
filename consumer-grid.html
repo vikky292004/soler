@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Grid Export / Import — SolarTrack Pro</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;600&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="consumer-sidebar.css" />
+    <style>
+        :root {
+            --green: #00C853;
+            --sb-w: 64px;
+            --sb-expanded: 260px;
+            --ease: cubic-bezier(.4, 0, .2, 1)
+        }
+
+        body {
+            animation: fi .4s ease
+        }
+
+        @keyframes fi {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        /* ── SIDEBAR & TOPBAR styles now shared via consumer-sidebar.css ── */
+
+
+        .page-body {
+            padding: 24px;
+            flex: 1
+        }
+
+        .section-hd {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            margin-bottom: 16px
+        }
+
+        .section-hd::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, .07)
+        }
+
+        /* Net meter visual */
+        .meter-card {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap
+        }
+
+        .meter-side {
+            flex: 1;
+            min-width: 160px;
+            text-align: center
+        }
+
+        .meter-val {
+            font-size: 36px;
+            font-weight: 900;
+            line-height: 1
+        }
+
+        .meter-lbl {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .4);
+            margin-top: 6px;
+            font-weight: 500
+        }
+
+        .meter-icon {
+            font-size: 36px;
+            margin-bottom: 8px
+        }
+
+        .meter-arrow {
+            font-size: 28px;
+            color: rgba(255, 255, 255, .2);
+            flex-shrink: 0
+        }
+
+        .sold-color {
+            color: #00C853
+        }
+
+        .imp-color {
+            color: #f87171
+        }
+
+        .net-box {
+            background: rgba(0, 0, 0, .25);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 16px 28px;
+            text-align: center
+        }
+
+        .net-val {
+            font-size: 22px;
+            font-weight: 900;
+            color: #00C853
+        }
+
+        .net-lbl {
+            font-size: 11px;
+            color: rgba(255, 255, 255, .4);
+            margin-top: 4px
+        }
+
+        /* Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .sc {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            padding: 20px;
+            transition: all .3s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .sc:hover {
+            transform: translateY(-4px)
+        }
+
+        .sc::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 14px 14px 0 0
+        }
+
+        .sc-green::before {
+            background: linear-gradient(90deg, #00C853, #00b96b)
+        }
+
+        .sc-red::before {
+            background: linear-gradient(90deg, #ef4444, #dc2626)
+        }
+
+        .sc-gold::before {
+            background: linear-gradient(90deg, #FFC107, #f97316)
+        }
+
+        .sc-blue::before {
+            background: linear-gradient(90deg, #1a6fd4, #5ba8f5)
+        }
+
+        .sc-icon {
+            font-size: 22px;
+            margin-bottom: 10px
+        }
+
+        .sc-val {
+            font-size: 24px;
+            font-weight: 900;
+            line-height: 1
+        }
+
+        .sc-green .sc-val {
+            color: #00C853
+        }
+
+        .sc-red .sc-val {
+            color: #f87171
+        }
+
+        .sc-gold .sc-val {
+            color: #FFC107
+        }
+
+        .sc-blue .sc-val {
+            color: #5ba8f5
+        }
+
+        .sc-lbl {
+            font-size: 11px;
+            color: rgba(255, 255, 255, .4);
+            margin-top: 6px
+        }
+
+        .sc-sub {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .25);
+            margin-top: 3px
+        }
+
+        .panel {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 24px
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 16px
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 240px
+        }
+
+        /* Monthly summary table */
+        .msm {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 24px
+        }
+
+        @media(max-width:600px) {
+            .msm {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .msm-item {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 12px;
+            padding: 16px
+        }
+
+        .msm-lbl {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            margin-bottom: 6px
+        }
+
+        .msm-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #f0f4ff
+        }
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <div style="display:flex">
+        <div id="overlay" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.5)"></div>
+        <aside class="csb collapsed" id="csb"></aside>
+        <div class="cmain sb-col" id="cmain">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="hbg" id="hbg"><span></span><span></span><span></span></div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="logo.png" width="36" height="36" alt="Logo" style="filter: drop-shadow(0 0 8px rgba(0,185,107,0.3)); flex-shrink:0" />
+                        <div>
+                            <div class="pg-title">⚡ Grid Export / Import</div>
+                            <div class="pg-bc"><a href="index.html" style="color:inherit;text-decoration:none;">Home</a> › My Energy › <a href="consumer-grid.html" style="color:inherit;text-decoration:none;">Grid Export / Import</a></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="tb-logout" onclick="authLogout(true)">🚪 Logout</button>
+                </div>
+            </header>
+            <div class="page-body">
+
+                <!-- Live Net Meter Display -->
+                <div class="section-hd">📡 Live Net Meter Reading (Today)</div>
+                <div class="meter-card">
+                    <div class="meter-side">
+                        <div class="meter-icon">☀</div>
+                        <div class="meter-val sold-color" id="m-gen">— kWh</div>
+                        <div class="meter-lbl">Generated Today</div>
+                    </div>
+                    <div class="meter-arrow">→</div>
+                    <div class="meter-side">
+                        <div class="meter-icon">🏠</div>
+                        <div class="meter-val" style="color:#5ba8f5" id="m-used">— kWh</div>
+                        <div class="meter-lbl">Home Consumption</div>
+                    </div>
+                    <div class="meter-arrow">→</div>
+                    <div class="net-box">
+                        <div class="meter-icon">⚡</div>
+                        <div class="meter-val sold-color" id="m-net">+0.0</div>
+                        <div class="net-lbl" id="m-net-lbl">Net Status</div>
+                    </div>
+                </div>
+
+                <!-- Cards -->
+                <div class="section-hd">📊 Today's Grid Summary</div>
+                <div class="cards-grid">
+                    <div class="sc sc-green">
+                        <div class="sc-icon">⬆</div>
+                        <div class="sc-val" id="c-sold">—</div>
+                        <div class="sc-lbl">kWh Exported (Sold)</div>
+                        <div class="sc-sub">→ EB Grid Credit</div>
+                    </div>
+                    <div class="sc sc-red">
+                        <div class="sc-icon">⬇</div>
+                        <div class="sc-val" id="c-imp">—</div>
+                        <div class="sc-lbl">kWh Imported from EB</div>
+                        <div class="sc-sub">← Extra consumption</div>
+                    </div>
+                    <div class="sc sc-gold">
+                        <div class="sc-icon">₹</div>
+                        <div class="sc-val" id="c-earn">—</div>
+                        <div class="sc-lbl">EB Credit Earned</div>
+                        <div class="sc-sub">@₹5/kWh exported</div>
+                    </div>
+                    <div class="sc sc-blue">
+                        <div class="sc-icon">🧾</div>
+                        <div class="sc-val" id="c-bill">—</div>
+                        <div class="sc-lbl">EB Bill Payable</div>
+                        <div class="sc-sub">@₹5/kWh imported</div>
+                    </div>
+                </div>
+
+                <!-- Monthly Summaries -->
+                <div class="section-hd">📅 This Month's Net Metering Summary</div>
+                <div class="msm">
+                    <div class="msm-item">
+                        <div class="msm-lbl">Total Exported</div>
+                        <div class="msm-val" id="ms-sold" style="color:#00C853">—</div>
+                    </div>
+                    <div class="msm-item">
+                        <div class="msm-lbl">Total Imported</div>
+                        <div class="msm-val" id="ms-imp" style="color:#f87171">—</div>
+                    </div>
+                    <div class="msm-item">
+                        <div class="msm-lbl">Total EB Credits</div>
+                        <div class="msm-val" id="ms-earn" style="color:#00C853">—</div>
+                    </div>
+                    <div class="msm-item">
+                        <div class="msm-lbl">Net Bill Payable</div>
+                        <div class="msm-val" id="ms-bill" style="color:#FFC107">—</div>
+                    </div>
+                </div>
+
+                <!-- Chart: Exported vs Imported over month -->
+                <div class="section-hd">📈 Monthly Export vs Import (Last 27 Days)</div>
+                <div class="panel">
+                    <div class="chart-wrap"><canvas id="ch-grid"></canvas></div>
+                </div>
+
+                <!-- Revenue chart -->
+                <div class="section-hd">💰 Daily EB Credits Earned</div>
+                <div class="panel">
+                    <div class="chart-wrap"><canvas id="ch-rev"></canvas></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+    <script src="energy.js"></script>
+    <script src="consumer-nav.js"></script>
+    <script>
+        let SESSION;
+        try { SESSION = requireAuth('consumer'); } catch (e) { SESSION = null; }
+        document.addEventListener('DOMContentLoaded', () => { buildConsumerSidebar('grid'); initSidebarToggle(); });
+        const getUser = () => SESSION ? SESSION.username : 'guest';
+
+        function init() {
+            const today = ENERGY.getToday(getUser());
+            const now = new Date();
+            const msData = ENERGY.getMonthSummary(getUser(), `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+            const days = ENERGY.getLastNDays(getUser(), 27);
+
+            // Net meter display
+            document.getElementById('m-gen').textContent = ENERGY.fmt(today.generated) + ' kWh';
+            document.getElementById('m-used').textContent = ENERGY.fmt(today.used) + ' kWh';
+            const net = today.sold - today.imported;
+            const netEl = document.getElementById('m-net');
+            const netLbl = document.getElementById('m-net-lbl');
+            netEl.textContent = (net >= 0 ? '+' : '') + ENERGY.fmt(net) + ' kWh';
+            netEl.style.color = net >= 0 ? '#00C853' : '#f87171';
+            netLbl.textContent = net >= 0 ? '✅ Exporting to EB (surplus)' : '🔌 Importing from EB (deficit)';
+
+            // Cards
+            document.getElementById('c-sold').textContent = ENERGY.fmt(today.sold) + ' kWh';
+            document.getElementById('c-imp').textContent = ENERGY.fmt(today.imported) + ' kWh';
+            document.getElementById('c-earn').textContent = ENERGY.fmtINR(today.savings);
+            document.getElementById('c-bill').textContent = ENERGY.fmtINR(today.net_bill);
+
+            // Monthly
+            document.getElementById('ms-sold').textContent = ENERGY.fmt(msData.totalSold) + ' kWh';
+            document.getElementById('ms-imp').textContent = ENERGY.fmt(msData.totalImported) + ' kWh';
+            document.getElementById('ms-earn').textContent = ENERGY.fmtINR(msData.totalSavings);
+            document.getElementById('ms-bill').textContent = ENERGY.fmtINR(msData.netPayable);
+
+            // Charts
+            const labels = days.map(d => d.date.slice(5));
+            const CO = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: 'rgba(255,255,255,.5)', font: { size: 10 }, boxWidth: 10 } } }, scales: { x: { ticks: { color: 'rgba(255,255,255,.35)', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.04)' } }, y: { ticks: { color: 'rgba(255,255,255,.35)', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true } } };
+
+            new Chart(document.getElementById('ch-grid'), { type: 'bar', data: { labels, datasets: [{ label: 'Exported (kWh)', data: days.map(d => d.sold), backgroundColor: 'rgba(0,200,83,.6)', borderColor: '#00C853', borderWidth: 1, borderRadius: 3 }, { label: 'Imported (kWh)', data: days.map(d => d.imported), backgroundColor: 'rgba(239,68,68,.5)', borderColor: '#ef4444', borderWidth: 1, borderRadius: 3 }] }, options: CO });
+            new Chart(document.getElementById('ch-rev'), { type: 'line', data: { labels, datasets: [{ label: 'EB Credit Earned (₹)', data: days.map(d => d.savings), borderColor: '#FFC107', backgroundColor: 'rgba(255,193,7,.12)', borderWidth: 2, pointBackgroundColor: '#FFC107', pointRadius: 3, tension: .4, fill: true }] }, options: CO });
+        }
+        init();
+    </script>
+</body>
+
+</html>

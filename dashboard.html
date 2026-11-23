@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errDiv = document.createElement("div");
+            errDiv.style = "position:fixed;top:0;left:0;z-index:999999;background:red;color:white;padding:20px;font-size:16px;width:100%;word-wrap:break-word;";
+            errDiv.innerHTML = "<strong>CRASH:</strong> " + message + " <br>Line: " + lineno + "<br>Source: " + source + "<br>" + (error ? error.stack : "");
+            document.body ? document.body.appendChild(errDiv) : window.addEventListener('DOMContentLoaded', () => document.body.appendChild(errDiv));
+        };
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <meta name="description" content="Solar Monitoring Dashboard — TNPDCL Net Metering" />
+    <title>Dashboard — Solar Monitoring System</title>
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* ── Dashboard-only styles ── */
+        .today-highlight {
+            background: linear-gradient(135deg, rgba(0, 185, 107, .1), rgba(26, 111, 212, .08));
+            border: 1px solid rgba(0, 185, 107, .25);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px
+        }
+
+        .th-left {
+            display: flex;
+            align-items: center;
+            gap: 14px
+        }
+
+        .th-pulse {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--grad-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            animation: pulse-ring 2.5s ease-in-out infinite
+        }
+
+        @keyframes pulse-ring {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 6px rgba(0, 185, 107, .15), var(--shadow-green)
+            }
+
+            50% {
+                box-shadow: 0 0 0 12px rgba(0, 185, 107, .08), 0 4px 28px rgba(0, 185, 107, .35)
+            }
+        }
+
+        .th-info .th-title {
+            font-size: 15px;
+            font-weight: 700
+        }
+
+        .th-info .th-sub {
+            font-size: 11.5px;
+            color: var(--txt-secondary);
+            margin-top: 2px
+        }
+
+        .th-stats {
+            display: flex;
+            gap: 20px
+        }
+
+        .ths-item {
+            text-align: center
+        }
+
+        .ths-item .ths-val {
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1
+        }
+
+        .ths-item .ths-lbl {
+            font-size: 10px;
+            color: var(--txt-muted);
+            margin-top: 3px
+        }
+
+        .row-today {
+            background: rgba(0, 185, 107, .07) !important
+        }
+
+        .row-today td {
+            color: var(--sol-green) !important;
+            font-weight: 600 !important
+        }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px
+        }
+
+        .info-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px
+        }
+
+        .ic-icon {
+            font-size: 20px;
+            margin-bottom: 8px
+        }
+
+        .ic-val {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 2px
+        }
+
+        .ic-lbl {
+            font-size: 10px;
+            color: var(--txt-muted);
+            font-weight: 500
+        }
+
+        .print-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 16px;
+            background: rgba(92, 61, 143, .2);
+            border: 1px solid rgba(92, 61, 143, .4);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            color: #b08af5;
+            cursor: pointer;
+            transition: all var(--t-fast)
+        }
+
+        .print-btn:hover {
+            background: rgba(92, 61, 143, .35)
+        }
+
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 16px;
+            background: rgba(0, 185, 107, .15);
+            border: 1px solid rgba(0, 185, 107, .35);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--sol-green);
+            cursor: pointer;
+            transition: all var(--t-fast)
+        }
+
+        .export-btn:hover {
+            background: rgba(0, 185, 107, .25)
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .55);
+            z-index: 90
+        }
+
+        .overlay.show {
+            display: block
+        }
+
+        /* bill datetime column */
+        .dt-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 1px
+        }
+
+        .dt-cell .dt-date {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            font-weight: 600
+        }
+
+        .dt-cell .dt-time {
+            font-size: 9.5px;
+            color: var(--txt-muted)
+        }
+
+        /* Today row highlight */
+        .row-today {
+            background: rgba(0, 185, 107, 0.12) !important;
+        }
+
+        .row-today td {
+            border-top: 1px solid rgba(0, 185, 107, 0.3);
+            border-bottom: 1px solid rgba(0, 185, 107, 0.3);
+        }
+
+        .row-today td:first-child {
+            border-left: 3px solid var(--sol-green);
+        }
+
+        /* profile avatar big */
+        .pf-av-big {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: var(--grad-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 800;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-green)
+        }
+
+        /* Live Demo Animations */
+        @keyframes pulseLive { 
+            0% { opacity:0.3; box-shadow:0 0 0 0 rgba(0,200,83,0.7); } 
+            50% { opacity:1; box-shadow:0 0 0 6px rgba(0,200,83,0); } 
+            100% { opacity:0.3; box-shadow:0 0 0 0 rgba(0,200,83,0); } 
+        }
+        .flash-update {
+            animation: flashNumber 0.6s ease-out;
+        }
+        @keyframes flashNumber {
+            0% { color: #fff; transform: scale(1.05); text-shadow: 0 0 10px rgba(255,255,255,0.8); }
+            100% { transform: scale(1); }
+        }
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <div class="app-shell">
+        <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+        <!-- ══ SIDEBAR ══ -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sb-brand">
+                <div class="sb-brand-icon" style="background:none;box-shadow:none;">
+                    <img src="logo.png" width="32" height="32" alt="Logo" />
+                </div>
+                <div class="sb-brand-text">
+                    <div class="sb-name">SolarTrack Pro</div>
+                    <div class="sb-sub">TNPDCL Net Metering</div>
+                </div>
+            </div>
+            <div class="sb-user">
+                <div class="sb-av" id="sb-av">A</div>
+                <div>
+                    <div class="sb-uname" id="sb-uname">Loading…</div>
+                    <div class="sb-urole" id="sb-urole">Consumer</div>
+                </div>
+            </div>
+            <nav class="sb-nav">
+                <div class="sb-nav-section">
+                    <div class="sb-nav-label">MY DASHBOARD</div>
+                    <div class="sb-nav-item active" id="snav-overview" onclick="showTab('dashboard')"><span
+                            class="nav-icon">🏠</span> Overview</div>
+                </div>
+                <div class="sb-nav-section">
+                    <div class="sb-nav-label">MY ENERGY</div>
+                    <div class="sb-nav-item" id="snav-solar" onclick="showTab('solar')"><span class="nav-icon">☀</span>
+                        Solar Generation</div>
+                    <div class="sb-nav-item" id="snav-battery" onclick="showTab('battery')"><span
+                            class="nav-icon">🔋</span> Battery Status</div>
+                </div>
+                <div class="sb-nav-section">
+                    <div class="sb-nav-label">BILLING</div>
+                    <div class="sb-nav-item" id="snav-payment" onclick="showTab('payment')"><span
+                            class="nav-icon">💳</span> Payment History</div>
+                    <div class="sb-nav-item" id="snav-download" onclick="showTab('download')"><span
+                            class="nav-icon">📄</span> Download Bill</div>
+                    <div class="sb-nav-item" id="snav-qr" onclick="showTab('qr')"><span class="nav-icon">📱</span> Scan
+                        QR Code</div>
+                </div>
+                <div class="sb-nav-section">
+                    <div class="sb-nav-label">ACCOUNT</div>
+                    <div class="sb-nav-item" id="snav-profile" onclick="showTab('profile')"><span
+                            class="nav-icon">👤</span> My Profile</div>
+                    <div class="sb-nav-item" id="snav-settings" onclick="showTab('settings')"><span
+                            class="nav-icon">⚙</span> Settings</div>
+                    <div class="sb-nav-item" onclick="authLogout(true)" style="color:#f87171;"><span
+                            class="nav-icon">🚪</span> Logout</div>
+                </div>
+            </nav>
+            <div class="sb-footer">
+                Tamil Nadu Power Distribution<br>Corporation Ltd. &mdash; Solar Division<br>
+                <span id="sb-date" style="color:var(--sol-green);font-weight:600;"></span>
+            </div>
+        </aside>
+
+        <!-- ══ MAIN ══ -->
+        <div class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="hamburger" id="hamburger" onclick="openSidebar()">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="logo.png" width="36" height="36" alt="Logo" style="filter: drop-shadow(0 0 8px rgba(0,185,107,0.3)); flex-shrink:0" />
+                        <div>
+                            <div class="topbar-page-title" id="page-title">Dashboard</div>
+                            <div class="topbar-breadcrumb"><a href="index.html" style="color:inherit;text-decoration:none;cursor:pointer;">Home</a> › <a href="javascript:showTab(activeTab)" style="color:inherit;text-decoration:none;cursor:pointer;">Solar Monitoring</a></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="live-toggle" style="display:flex; align-items:center; gap:8px; margin-right:16px;">
+                        <span style="font-size:11px; font-weight:700; color:var(--sol-green); text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:5px;">
+                            <span id="live-dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--sol-green); opacity:0.3; transition:0.3s;"></span> 
+                            Live Demo
+                        </span>
+                        <label class="switch" style="position:relative; display:inline-block; width:36px; height:20px;">
+                            <input type="checkbox" id="live-demo-toggle" onchange="toggleLiveDemo()" style="opacity:0; width:0; height:0;">
+                            <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; border-radius:20px; transition:.4s;"></span>
+                            <style>
+                                .slider { background-color: rgba(255,255,255,0.1); }
+                                .slider:before { position:absolute; content:""; height:14px; width:14px; left:3px; bottom:3px; background-color:white; border-radius:50%; transition:.4s; }
+                                input:checked + .slider { background-color: var(--sol-green); }
+                                input:checked + .slider:before { transform: translateX(16px); }
+                            </style>
+                        </label>
+                    </div>
+                    <div class="topbar-time" id="live-clock">—</div>
+                    <div class="topbar-logout" onclick="authLogout(true)">🚪 Logout</div>
+                </div>
+            </header>
+
+            <div class="page-body">
+
+                <!-- ═════ TAB: DASHBOARD ═════ -->
+                <div class="tab-panel active" id="tab-dashboard">
+                    <div class="today-highlight anim-up">
+                        <div class="th-left">
+                            <div class="th-pulse">⚡</div>
+                            <div class="th-info">
+                                <div class="th-title">Today's Solar Performance</div>
+                                <div class="th-sub" id="th-date-sub">—</div>
+                            </div>
+                        </div>
+                        <div class="th-stats">
+                            <div class="ths-item">
+                                <div class="ths-val td-green" id="td-gen">—</div>
+                                <div class="ths-lbl">Generated</div>
+                            </div>
+                            <div class="ths-item">
+                                <div class="ths-val td-blue" id="td-used">—</div>
+                                <div class="ths-lbl">Used</div>
+                            </div>
+                            <div class="ths-item">
+                                <div class="ths-val td-gold" id="td-exp">—</div>
+                                <div class="ths-lbl">Exported</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stat cards (populated by JS) -->
+                    <div class="stats-grid" id="stat-cards-row">
+                        <div class="stat-card stat-card-green anim-up anim-d1">
+                            <div class="sc-top">
+                                <div class="sc-icon sc-icon-green">☀</div><span class="sc-trend up"
+                                    id="sc-trend-gen">+12.4%</span>
+                            </div>
+                            <div class="sc-val sc-val-green" id="sc-gen">—</div>
+                            <div class="sc-label">kWh Total Generated &mdash; Last 7 Days</div>
+                            <div class="divider" style="margin:10px 0;"></div>
+                            <div class="progress-bar">
+                                <div class="progress-fill pf-green" id="sc-bar-gen" style="width:0%"></div>
+                            </div>
+                            <div class="sc-sub" id="sc-sub-gen">—</div>
+                        </div>
+                        <div class="stat-card stat-card-blue anim-up anim-d2">
+                            <div class="sc-top">
+                                <div class="sc-icon sc-icon-blue">🏠</div><span class="sc-trend down"
+                                    id="sc-trend-used">-3.1%</span>
+                            </div>
+                            <div class="sc-val sc-val-blue" id="sc-used">—</div>
+                            <div class="sc-label">kWh Total Home Consumed</div>
+                            <div class="divider" style="margin:10px 0;"></div>
+                            <div class="progress-bar">
+                                <div class="progress-fill pf-blue" id="sc-bar-used" style="width:0%"></div>
+                            </div>
+                            <div class="sc-sub" id="sc-sub-used">—</div>
+                        </div>
+                        <div class="stat-card stat-card-gold anim-up anim-d3">
+                            <div class="sc-top">
+                                <div class="sc-icon sc-icon-gold">⚡</div><span class="sc-trend up"
+                                    id="sc-trend-exp">+8.5%</span>
+                            </div>
+                            <div class="sc-val sc-val-gold" id="sc-exp">—</div>
+                            <div class="sc-label">kWh Exported to EB Grid</div>
+                            <div class="divider" style="margin:10px 0;"></div>
+                            <div class="progress-bar">
+                                <div class="progress-fill pf-gold" id="sc-bar-exp" style="width:0%"></div>
+                            </div>
+                            <div class="sc-sub" id="sc-sub-exp">—</div>
+                        </div>
+                        <div class="stat-card stat-card-purple anim-up anim-d4">
+                            <div class="sc-top">
+                                <div class="sc-icon sc-icon-purple">💰</div><span class="sc-trend up"
+                                    id="sc-trend-amt">—</span>
+                            </div>
+                            <div class="sc-val sc-val-purple" id="sc-amt">—</div>
+                            <div class="sc-label">EB Credit &mdash; Last 7 Days</div>
+                            <div class="divider" style="margin:10px 0;"></div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="sc-bar-amt"
+                                    style="width:60%;background:var(--grad-purple)"></div>
+                            </div>
+                            <div class="sc-sub" id="sc-sub-amt">—</div>
+                        </div>
+                    </div>
+
+                    <div class="three-col anim-up">
+                        <!-- Recent log table -->
+                        <div class="card">
+                            <div class="sec-title">📋 Recent Daily Log (Last 7 Days)</div>
+                            <div class="tbl-wrap">
+                                <table class="data-tbl" id="recent-tbl">
+                                    <thead>
+                                        <tr>
+                                            <th>Date &amp; Time</th>
+                                            <th>Day</th>
+                                            <th>☀ Gen (kWh)</th>
+                                            <th>🏠 Used</th>
+                                            <th>⚡ Exported</th>
+                                            <th>Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-tbl-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- Monthly summary -->
+                        <div class="card">
+                            <div class="sec-title">📊 Monthly Summary</div>
+                            <div class="monthly-summary">
+                                <div class="ms-row">
+                                    <div class="ms-left"><span class="ms-icon">☀</span><span class="ms-label">Total
+                                            Generated</span></div>
+                                    <div class="ms-val td-green" id="ms-gen">—</div>
+                                </div>
+                                <div class="ms-row">
+                                    <div class="ms-left"><span class="ms-icon">🏠</span><span class="ms-label">Total
+                                            Home Used</span></div>
+                                    <div class="ms-val td-blue" id="ms-used">—</div>
+                                </div>
+                                <div class="ms-row">
+                                    <div class="ms-left"><span class="ms-icon">⚡</span><span class="ms-label">Total
+                                            Exported</span></div>
+                                    <div class="ms-val td-gold" id="ms-exp">—</div>
+                                </div>
+                                <div class="ms-row">
+                                    <div class="ms-left"><span class="ms-icon">💰</span><span class="ms-label">EB Credit
+                                            Amount</span></div>
+                                    <div class="ms-val td-green" id="ms-amt" style="font-size:18px;">—</div>
+                                </div>
+                                <div class="ms-row">
+                                    <div class="ms-left"><span class="ms-icon">📅</span><span class="ms-label">Billing
+                                            Period</span></div>
+                                    <div class="ms-val" style="font-size:11px;" id="ms-period">—</div>
+                                </div>
+                                <div class="ms-row">
+                                    <div class="ms-left"><span class="ms-icon">⚙</span><span class="ms-label">Tariff
+                                            Rate</span></div>
+                                    <div class="ms-val" id="ms-tariff">—</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mini chart -->
+                    <div class="card anim-up">
+                        <div class="sec-title">📈 Weekly Generation Overview (Last 7 Days)</div>
+                        <div class="chart-wrap"><canvas id="chart-mini" height="90"></canvas></div>
+                    </div>
+                </div><!-- /tab-dashboard -->
+
+                <!-- ═════ TAB: DAILY REPORT ═════ -->
+                <div class="tab-panel" id="tab-daily">
+                    <div class="card">
+                        <div
+                            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                            <div class="sec-title" style="margin-bottom:0">📋 Full Daily Solar Energy Report</div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <span class="badge badge-green">Last 7 Days</span>
+                                <span class="badge badge-gold" id="dr-badge-total">— Total</span>
+                                <div class="export-btn" onclick="exportSolarReport()">📥 Export CSV</div>
+                            </div>
+                        </div>
+                        <div class="tbl-wrap">
+                            <table class="data-tbl">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Date &amp; Time</th>
+                                        <th>Day</th>
+                                        <th>☀ Solar Generated (kWh)</th>
+                                        <th>🏠 Home Used (kWh)</th>
+                                        <th>⚡ Exported to EB (kWh)</th>
+                                        <th>Remaining Balance</th>
+                                        <th>EB Credit (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="full-tbl-body"></tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3">📊 Monthly Total</td>
+                                        <td id="ft-gen">—</td>
+                                        <td id="ft-used">—</td>
+                                        <td id="ft-exp">—</td>
+                                        <td>—</td>
+                                        <td id="ft-amt">—</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div><!-- /tab-daily -->
+
+                <!-- ═════ TAB: ANALYTICS ═════ -->
+                <div class="tab-panel" id="tab-charts">
+                    <div class="two-col">
+                        <div class="card">
+                            <div class="sec-title">☀ Daily Solar Generation — May 2026</div>
+                            <div class="chart-wrap"><canvas id="chart-gen" height="180"></canvas></div>
+                        </div>
+                        <div class="card">
+                            <div class="sec-title">⚡ Daily Export to EB Grid — May 2026</div>
+                            <div class="chart-wrap"><canvas id="chart-exp" height="180"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-bottom:24px;">
+                        <div class="sec-title">📊 Generation vs Consumption vs Export</div>
+                        <div class="chart-wrap"><canvas id="chart-compare" height="140"></canvas></div>
+                    </div>
+                    <div class="two-col">
+                        <div class="card">
+                            <div class="sec-title">🥧 Energy Distribution</div>
+                            <div class="chart-wrap" style="max-width:300px;margin:0 auto;"><canvas id="chart-pie"
+                                    height="220"></canvas></div>
+                        </div>
+                        <div class="card">
+                            <div class="sec-title">📈 Cumulative Generation</div>
+                            <div class="chart-wrap"><canvas id="chart-cumul" height="220"></canvas></div>
+                        </div>
+                    </div>
+                </div><!-- /tab-charts -->
+
+                <!-- ═════ TAB: BILL ═════ -->
+                <div class="tab-panel" id="tab-bill">
+                    <div
+                        style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+                        <h2 style="font-size:17px;font-weight:700;">🧾 Solar Net Metering Export Bill</h2>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <div class="print-btn" onclick="window.open('solar_bill.html','_blank')">🔗 Open PDF Bill
+                            </div>
+                            <div class="export-btn" onclick="exportSolarReport()">📥 Export CSV</div>
+                            <div class="print-btn" onclick="window.print()">🖨 Print Page</div>
+                        </div>
+                    </div>
+
+                    <div class="bill-section">
+                        <div class="bill-header">
+                            <div>
+                                <div class="bill-header-title">TNPDCL — Residential Solar Net Metering Monthly Export
+                                    Bill</div>
+                                <div class="bill-header-sub">Tamil Nadu Power Distribution Corporation Limited
+                                    &nbsp;|&nbsp; Solar Division</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:9px;color:rgba(255,255,255,.5);letter-spacing:1px;">BILL ID</div>
+                                <div style="font-family:'Roboto Mono',monospace;font-size:13px;color:#fff;font-weight:700;letter-spacing:.8px;"
+                                    id="bill-id">—</div>
+                            </div>
+                        </div>
+
+                        <div class="bill-body">
+                            <!-- Consumer details -->
+                            <div class="sec-title">👤 Consumer Details</div>
+                            <div class="bill-grid" style="margin-bottom:16px;">
+                                <div class="bill-row">
+                                    <div class="bill-key">Consumer Name</div>
+                                    <div class="bill-val bold" id="bill-name">—</div>
+                                </div>
+                                <div class="bill-row">
+                                    <div class="bill-key">Service Number</div>
+                                    <div class="bill-val mono" id="bill-svc">—</div>
+                                </div>
+                                <div class="bill-row">
+                                    <div class="bill-key">Address</div>
+                                    <div class="bill-val" id="bill-addr">—</div>
+                                </div>
+                                <div class="bill-row">
+                                    <div class="bill-key">Section / Sub-Division</div>
+                                    <div class="bill-val" id="bill-sec">—</div>
+                                </div>
+                                <div class="bill-row">
+                                    <div class="bill-key">Billing Period</div>
+                                    <div class="bill-val bold" id="bill-period">—</div>
+                                </div>
+                                <div class="bill-row">
+                                    <div class="bill-key">Bill Generated</div>
+                                    <div class="bill-val bold" id="bill-gendate">—</div>
+                                </div>
+                                <div class="bill-row">
+                                    <div class="bill-key">Connection Type</div>
+                                    <div class="bill-val">LT – Domestic (Solar Net Metering)</div>
+                                </div>
+                                <div class="bill-row">
+                                    <div class="bill-key">Due Date</div>
+                                    <div class="bill-val red" id="bill-due">—</div>
+                                </div>
+                            </div>
+
+                            <!-- Energy summary -->
+                            <div class="sec-title">⚡ Energy Summary</div>
+                            <div class="info-cards">
+                                <div class="info-card">
+                                    <div class="ic-icon">☀</div>
+                                    <div class="ic-val td-green" id="bill-ic-gen">— kWh</div>
+                                    <div class="ic-lbl">Solar Generated</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="ic-icon">🏠</div>
+                                    <div class="ic-val td-blue" id="bill-ic-used">— kWh</div>
+                                    <div class="ic-lbl">Home Consumed</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="ic-icon">⚡</div>
+                                    <div class="ic-val td-gold" id="bill-ic-exp">— kWh</div>
+                                    <div class="ic-lbl">Exported to EB</div>
+                                </div>
+                            </div>
+
+                            <!-- Amount box -->
+                            <div class="amount-box">
+                                <div class="ab-left">
+                                    <div class="ab-label">Tariff Calculation</div>
+                                    <div class="ab-formula">Exported Energy × Tariff Rate = EB Credit</div>
+                                    <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;"
+                                        id="bill-formula-detail">—</div>
+                                </div>
+                                <div class="ab-right">
+                                    <div
+                                        style="font-size:9px;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;text-align:right;">
+                                        Final Amount Payable by EB</div>
+                                    <div class="ab-amount" id="bill-total">—</div>
+                                    <div class="ab-words" id="bill-words">—</div>
+                                </div>
+                            </div>
+
+                            <!-- Notice -->
+                            <div class="notice-box">
+                                <strong>📌 Official Notice:</strong> This is a digitally generated Solar Net Metering
+                                Export Credit Bill issued under the <strong>Tamil Nadu Solar Energy Policy 2019</strong>
+                                and <strong>TNERC Net Metering Regulations 2021</strong>. The credit will be adjusted in
+                                the next bill or credited via NACH within <strong>30 working days</strong>. Helpline:
+                                <strong>1912</strong> | <strong>www.tnebnet.org</strong>
+                            </div>
+
+                            <!-- QR + Barcode + Settlement -->
+                            <div class="sec-title">🔍 Verification &amp; Codes</div>
+                            <div class="qr-barcode-row">
+
+                                <div class="barcode-block">
+                                    <div class="bb-title">Consumer Barcode</div>
+                                    <svg id="barcode-svg"></svg>
+                                    <div class="bb-num" id="barcode-num">—</div>
+                                </div>
+                                <div style="flex:1;min-width:180px;">
+                                    <div class="sec-title" style="margin-bottom:10px;">💳 Settlement Details</div>
+                                    <div class="monthly-summary" style="gap:8px;">
+                                        <div class="ms-row" style="padding:8px 12px;"><span
+                                                style="font-size:11px;color:var(--txt-muted);">Export Credit</span><span
+                                                style="font-size:13px;font-weight:700;color:var(--sol-green);"
+                                                id="settle-credit">—</span></div>
+                                        <div class="ms-row" style="padding:8px 12px;"><span
+                                                style="font-size:11px;color:var(--txt-muted);">Tariff
+                                                Applied</span><span style="font-size:13px;font-weight:600;"
+                                                id="settle-tariff">—</span></div>
+                                        <div class="ms-row" style="padding:8px 12px;"><span
+                                                style="font-size:11px;color:var(--txt-muted);">Settlement</span><span
+                                                style="font-size:11px;font-weight:600;">NACH Credit</span></div>
+                                        <div class="ms-row" style="padding:8px 12px;"><span
+                                                style="font-size:11px;color:var(--txt-muted);">Payment Ref</span><span
+                                                style="font-family:'Roboto Mono',monospace;font-size:10px;"
+                                                id="settle-ref">—</span></div>
+                                        <div class="ms-row" style="padding:8px 12px;"><span
+                                                style="font-size:11px;color:var(--txt-muted);">Meter Serial</span><span
+                                                style="font-family:'Roboto Mono',monospace;font-size:10px;"
+                                                id="settle-meter">—</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stamp + Signatures -->
+                            <div class="divider"></div>
+                            <div class="bill-stamp">
+                                <div class="sig-pair">
+                                    <div class="sig-ln"></div>
+                                    <div class="sig-label">Consumer's Signature</div>
+                                    <div class="sig-name" id="bill-sig-name">—</div>
+                                </div>
+                                <div class="stamp-circle">
+                                    <div class="sc-l">TNPDCL</div>
+                                    <div class="sc-m">VERIFIED<br>OFFICIAL</div>
+                                    <div class="sc-s">Chennai North Circle</div>
+                                    <div class="sc-s" style="margin-top:2px;" id="stamp-date">—</div>
+                                </div>
+                                <div class="sig-pair">
+                                    <div class="sig-ln"></div>
+                                    <div class="sig-label">Authorized Signatory</div>
+                                    <div class="sig-name">Asst. Engineer, TNPDCL</div>
+                                </div>
+                            </div>
+                        </div><!-- /bill-body -->
+                    </div><!-- /bill-section -->
+
+                    <div
+                        style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 20px;font-size:11px;color:var(--txt-muted);line-height:1.6;margin-bottom:24px;">
+                        🔒 <strong style="color:var(--txt-secondary);">Digitally Generated Solar Net Metering
+                            Statement</strong> &mdash; Authorized Residential Solar Monitoring System &mdash; <strong
+                            style="color:var(--sol-green);">Tamper Proof – QR Verified</strong> &mdash; Document ID:
+                        TNPDCL/SMD/2026/CH/<span id="doc-id">—</span>
+                    </div>
+                </div><!-- /tab-bill -->
+
+                <!-- ═════ TAB: PROFILE ═════ -->
+                <div class="tab-panel" id="tab-profile">
+                    <div class="two-col">
+                        <div class="card">
+                            <div class="sec-title">👤 Consumer Profile</div>
+                            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+                                <div class="pf-av-big" id="pf-avatar">A</div>
+                                <div>
+                                    <div style="font-size:20px;font-weight:800;" id="pf-name">—</div>
+                                    <div class="badge badge-green" style="margin-top:5px;" id="pf-role">Consumer</div>
+                                </div>
+                            </div>
+                            <div class="monthly-summary" style="gap:8px;">
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">SERVICE
+                                        NUMBER</span><span class="td-mono" id="pf-svc">—</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">ADDRESS</span><span
+                                        id="pf-addr">—</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">SECTION</span><span
+                                        id="pf-sec">—</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">MOBILE</span><span
+                                        id="pf-mobile">—</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">EMAIL</span><span
+                                        id="pf-email">—</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">SYSTEM
+                                        CAPACITY</span><span id="pf-cap">—</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">METER
+                                        SERIAL</span><span class="td-mono" id="pf-meter">—</span></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="sec-title">🔐 Session Information</div>
+                            <div class="monthly-summary" style="gap:8px;">
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">LOGGED IN
+                                        AS</span><span id="sess-user">—</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">LOGIN
+                                        TIME</span><span id="sess-time">—</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">SESSION
+                                        MODE</span><span class="badge badge-blue">Demo / LocalStorage</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">PLATFORM</span><span>SolarTrack
+                                        Pro v2.1</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="font-size:11px;color:var(--txt-muted);font-weight:600;">TARIFF
+                                        RATE</span><span id="pf-tariff">—</span></div>
+                            </div>
+                            <div style="margin-top:20px;">
+                                <button class="btn btn-secondary btn-block" onclick="authLogout()"
+                                    style="border-color:rgba(239,68,68,.3);color:#f87171;">🚪 Logout from
+                                    System</button>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /tab-profile -->
+
+                <!-- ═════ TAB: SOLAR GENERATION ═════ -->
+                <div class="tab-panel" id="tab-solar">
+                    <div class="today-highlight anim-up" style="margin-bottom:20px;">
+                        <div class="th-left">
+                            <div class="th-pulse">☀</div>
+                            <div class="th-info">
+                                <div class="th-title">Today's Solar Generation Status</div>
+                                <div class="th-sub" id="sol-date-sub">Loading…</div>
+                            </div>
+                        </div>
+                        <div class="th-stats">
+                            <div class="ths-item">
+                                <div class="ths-val td-green" id="sol-gen-today">—</div>
+                                <div class="ths-lbl">Generated (Max 10 kWh)</div>
+                            </div>
+                            <div class="ths-item">
+                                <div class="ths-val td-blue" id="sol-output-live">—</div>
+                                <div class="ths-lbl">Current Output (kW)</div>
+                            </div>
+                            <div class="ths-item">
+                                <div class="ths-val td-gold" id="sol-time-now">—</div>
+                                <div class="ths-lbl">Current Time</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Consumption Analysis -->
+                    <div class="sec-title" style="margin:0 0 14px;">🔥 Consumption Analysis</div>
+                    <div
+                        style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:22px;">
+                        <div class="card" style="border-left:3px solid #ef4444;">
+                            <div class="sec-title" style="font-size:11px;margin-bottom:8px;">🔴 Peak Load Period</div>
+                            <div style="font-size:20px;font-weight:900;color:#f87171;" id="sol-peak-time">2 PM – 4 PM
+                            </div>
+                            <div style="font-size:11px;color:var(--txt-muted);margin-top:4px;" id="sol-peak-val">Highest
+                                consumption window</div>
+                        </div>
+                        <div class="card" style="border-left:3px solid var(--sol-green);">
+                            <div class="sec-title" style="font-size:11px;margin-bottom:8px;">🟢 Off-Peak Period</div>
+                            <div style="font-size:20px;font-weight:900;color:var(--sol-green);" id="sol-low-time">1 AM –
+                                4 AM</div>
+                            <div style="font-size:11px;color:var(--txt-muted);margin-top:4px;" id="sol-low-val">Lowest
+                                consumption window</div>
+                        </div>
+                        <div class="card" style="border-left:3px solid var(--sol-gold);">
+                            <div class="sec-title" style="font-size:11px;margin-bottom:8px;">⚡ Peak Load Indicator</div>
+                            <div style="font-size:18px;font-weight:900;color:var(--sol-gold);" id="sol-peak-ind">—</div>
+                            <div style="font-size:11px;color:var(--txt-muted);margin-top:4px;">vs daily average</div>
+                        </div>
+                        <div class="card" style="border-left:3px solid #5ba8f5;">
+                            <div class="sec-title" style="font-size:11px;margin-bottom:8px;">📊 System Efficiency</div>
+                            <div style="font-size:18px;font-weight:900;color:#5ba8f5;" id="sol-eff">—</div>
+                            <div style="font-size:11px;color:var(--txt-muted);margin-top:4px;">Capacity utilisation
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Hourly Charts -->
+                    <div class="three-col"
+                        style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px;">
+                        <div class="card">
+                            <div class="sec-title">☀ Hourly Generation (kWh) — Color Coded</div>
+                            <div class="chart-wrap" style="height:220px;"><canvas id="chart-hourly-gen"
+                                    height="220"></canvas></div>
+                            <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--txt-muted);">
+                                <span style="color:#00b96b;">● Low</span><span style="color:#FFC107;">●
+                                    Medium</span><span style="color:#ef4444;">● High</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="sec-title">🏠 Hourly Consumption (kWh) — Color Coded</div>
+                            <div class="chart-wrap" style="height:220px;"><canvas id="chart-hourly-cons"
+                                    height="220"></canvas></div>
+                        </div>
+                    </div>
+                    <!-- Daily Summary -->
+                    <div class="sec-title" style="margin-bottom:14px;">📋 Daily Summary</div>
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;">
+                        <div class="card" style="text-align:center;">
+                            <div style="font-size:22px;font-weight:900;color:var(--sol-green);" id="sum-generated">—
+                            </div>
+                            <div style="font-size:10px;color:var(--txt-muted);margin-top:4px;">Total Generated (kWh)
+                            </div>
+                        </div>
+                        <div class="card" style="text-align:center;">
+                            <div style="font-size:22px;font-weight:900;color:#5ba8f5;" id="sum-used">—</div>
+                            <div style="font-size:10px;color:var(--txt-muted);margin-top:4px;">Total Used (kWh)</div>
+                        </div>
+                        <div class="card" style="text-align:center;">
+                            <div style="font-size:22px;font-weight:900;color:var(--sol-gold);" id="sum-sold">—</div>
+                            <div style="font-size:10px;color:var(--txt-muted);margin-top:4px;">Total Sold to EB (kWh)
+                            </div>
+                        </div>
+                        <div class="card" style="text-align:center;">
+                            <div style="font-size:22px;font-weight:900;color:#f87171;" id="sum-imported">—</div>
+                            <div style="font-size:10px;color:var(--txt-muted);margin-top:4px;">Total Imported (kWh)
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /tab-solar -->
+
+                <!-- ═════ TAB: BATTERY STATUS ═════ -->
+                <div class="tab-panel" id="tab-battery">
+                    <div class="sec-title" style="margin-bottom:18px;">🔋 Battery Storage — 10 kWh Unit</div>
+                    <div
+                        style="display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start;margin-bottom:22px;">
+                        <!-- Animated Battery Meter -->
+                        <div style="text-align:center;">
+                            <div id="bat-meter-body"
+                                style="width:80px;height:170px;border:3px solid rgba(255,255,255,.15);border-radius:10px;margin:0 auto;position:relative;overflow:hidden;background:rgba(0,0,0,.3);">
+                                <div id="bat-liquid"
+                                    style="position:absolute;bottom:0;left:0;right:0;height:74%;background:linear-gradient(0deg,#00b96b,#00C853);border-radius:0 0 7px 7px;transition:height 1.4s ease;">
+                                </div>
+                                <div id="bat-pct-overlay"
+                                    style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);">
+                                    74%</div>
+                            </div>
+                            <div style="font-size:11px;color:var(--txt-muted);margin-top:8px;">SN: TNBT-0042-B</div>
+                            <div id="bat-status-badge"
+                                style="margin-top:8px;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.3);color:#00C853;">
+                                ⚡ Charging</div>
+                        </div>
+                        <!-- Battery Info -->
+                        <div class="card">
+                            <div class="sec-title" style="margin-bottom:14px;">🔋 Battery Details</div>
+                            <div class="monthly-summary" style="gap:6px;">
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;font-weight:600;">CAPACITY</span><span
+                                        style="font-weight:700;">10 kWh</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;font-weight:600;">STORED
+                                        ENERGY</span><span style="color:var(--sol-gold);font-weight:700;"
+                                        id="bat-stored">7.4 kWh</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;font-weight:600;">CHARGING
+                                        RATE</span><span id="bat-rate">2.1 kW</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;font-weight:600;">REMAINING
+                                        CAPACITY</span><span id="bat-remaining">2.6 kWh</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;font-weight:600;">EST. FULL
+                                        IN</span><span id="bat-eta">1h 14m</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;font-weight:600;">OVERFLOW
+                                        PROTECTION</span><span style="color:var(--sol-green);font-weight:700;">✅
+                                        Active</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;font-weight:600;">LAST
+                                        OVERFLOW</span><span>26 Feb 2026 — Exported to EB</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;font-weight:600;">TEMPERATURE</span><span
+                                        id="bat-temp">32°C — Normal</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Charge/Discharge History Chart -->
+                    <div class="card">
+                        <div class="sec-title">📈 Daily Charge / Discharge History (Last 7 Days)</div>
+                        <div class="chart-wrap" style="height:220px;"><canvas id="chart-battery-hist"
+                                height="220"></canvas></div>
+                    </div>
+                </div><!-- /tab-battery -->
+
+                <!-- ═════ TAB: PAYMENT HISTORY ═════ -->
+                <div class="tab-panel" id="tab-payment">
+                    <div class="sec-title" style="margin-bottom:16px;">💳 Payment History</div>
+                    <div class="card anim-up">
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+                            <input type="text" id="pay-search" placeholder="🔍 Search by Transaction ID, Month…"
+                                oninput="filterPayments()"
+                                style="flex:1;min-width:200px;padding:9px 14px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:#fff;font-size:12px;font-family:inherit;outline:none;">
+                            <select id="pay-month-filter" onchange="filterPayments()"
+                                style="padding:9px 12px;border-radius:9px;background:rgba(13,22,40,.9);border:1px solid rgba(255,255,255,.09);color:#fff;font-size:11px;font-family:inherit;outline:none;cursor:pointer;">
+                                <option value="">All Months</option>
+                                <option>Mar 2026</option>
+                                <option>Feb 2026</option>
+                                <option>Jan 2026</option>
+                                <option>Dec 2025</option>
+                                <option>Nov 2025</option>
+                                <option>Oct 2025</option>
+                            </select>
+                            <select id="pay-sort" onchange="filterPayments()"
+                                style="padding:9px 12px;border-radius:9px;background:rgba(13,22,40,.9);border:1px solid rgba(255,255,255,.09);color:#fff;font-size:11px;font-family:inherit;outline:none;cursor:pointer;">
+                                <option value="desc">Newest First</option>
+                                <option value="asc">Oldest First</option>
+                            </select>
+                        </div>
+                        <div class="tbl-wrap">
+                            <table class="data-tbl" id="payment-table">
+                                <thead>
+                                    <tr>
+                                        <th>Transaction ID</th>
+                                        <th>Bill Month</th>
+                                        <th>Amount Paid</th>
+                                        <th>Payment Method</th>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="payment-tbody"></tbody>
+                            </table>
+                        </div>
+                        <div id="pay-no-results"
+                            style="display:none;text-align:center;padding:30px;color:var(--txt-muted);font-size:13px;">
+                            No records found.</div>
+                    </div>
+                </div><!-- /tab-payment -->
+
+                <!-- ═════ TAB: DOWNLOAD BILL ═════ -->
+                <div class="tab-panel" id="tab-download">
+                    <div class="sec-title" style="margin-bottom:20px;">📄 Download Electricity Bill</div>
+                    <div style="max-width:600px;">
+                        <div class="card anim-up">
+                            <div class="sec-title" style="margin-bottom:16px;">📋 Bill Preview — May 2026</div>
+                            <div class="monthly-summary" style="gap:6px;">
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Consumer Name</span><span
+                                        id="dl-name" style="font-weight:700;">—</span></div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Consumer ID</span><span
+                                        id="dl-id"
+                                        style="font-family:'Roboto Mono',monospace;color:var(--sol-green);font-size:11px;">—</span>
+                                </div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Bill Month</span><span>March
+                                        2026</span></div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Total Generated</span><span
+                                        id="dl-gen">—</span></div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Total Used</span><span
+                                        id="dl-used">—</span></div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Total Sold to EB</span><span
+                                        id="dl-sold">—</span></div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">EB Charges</span><span
+                                        id="dl-eb">—</span></div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Net Payable</span><span
+                                        id="dl-net" style="color:var(--sol-green);font-weight:900;">—</span></div>
+                            </div>
+                            <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+                                <button class="btn btn-primary" onclick="downloadBillPDF()" style="font-size:13px;">📥
+                                    Download PDF Bill</button>
+                                <button class="btn btn-secondary" onclick="window.print()" style="font-size:13px;">🖨
+                                    Print</button>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /tab-download -->
+
+                <!-- ═════ TAB: SCAN QR CODE ═════ -->
+                <div class="tab-panel" id="tab-qr">
+                    <div class="sec-title" style="margin-bottom:20px;">📱 QR Code — Bill Verification</div>
+                    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
+                        <div class="card anim-up"
+                            style="display:flex;flex-direction:column;align-items:center;gap:14px;min-width:200px;">
+                            <div style="font-size:13px;font-weight:700;">Monthly Bill QR Code</div>
+                            <div id="qr-render" style="background:#fff;border-radius:10px;padding:10px;"></div>
+                            <div id="qr-bill-id"
+                                style="font-size:10px;color:var(--txt-muted);font-family:'Roboto Mono',monospace;text-align:center;">
+                                Bill ID: —</div>
+                            <button class="btn btn-primary" style="font-size:12px;" onclick="window.print()">🖨 Print
+                                QR</button>
+                        </div>
+                        <div class="card anim-up" style="flex:1;min-width:280px;">
+                            <div class="sec-title" style="margin-bottom:14px;">ℹ Bill QR Information</div>
+                            <div class="monthly-summary" style="gap:6px;">
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Consumer</span><span
+                                        id="qr-consumer">—</span></div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Service No.</span><span
+                                        id="qr-svc"
+                                        style="font-family:'Roboto Mono',monospace;color:var(--sol-green);font-size:11px;">—</span>
+                                </div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Billing Period</span><span>March
+                                        2026</span></div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Bill Amount</span><span
+                                        id="qr-amount" style="color:var(--sol-green);font-weight:700;">—</span></div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Verify At</span><span
+                                        style="font-size:10px;">tnpdcl.gov.in/solar/verify</span></div>
+                                <div class="ms-row" style="padding:8px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Status</span><span
+                                        class="badge badge-green">✅ Authenticated</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /tab-qr -->
+
+                <!-- ═════ TAB: SETTINGS ═════ -->
+                <div class="tab-panel" id="tab-settings">
+                    <div class="sec-title" style="margin-bottom:20px;">⚙ Settings</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                        <div class="card anim-up">
+                            <div class="sec-title" style="margin-bottom:14px;">🔔 Notification Preferences</div>
+                            <div class="monthly-summary" style="gap:6px;">
+                                <div class="ms-row"
+                                    style="padding:10px 14px;justify-content:space-between;align-items:center;">
+                                    <span style="font-size:12px;">Bill Generation Alerts</span>
+                                    <label class="switch" style="position:relative;display:inline-block;width:36px;height:20px;">
+                                        <input type="checkbox" checked style="opacity:0;width:0;height:0;" onchange="showToast('Preference updated', 'success')">
+                                        <span class="slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;border-radius:20px;transition:.4s;"></span>
+                                    </label>
+                                </div>
+                                <div class="ms-row"
+                                    style="padding:10px 14px;justify-content:space-between;align-items:center;">
+                                    <span style="font-size:12px;">Battery Overflow Alerts</span>
+                                    <label class="switch" style="position:relative;display:inline-block;width:36px;height:20px;">
+                                        <input type="checkbox" checked style="opacity:0;width:0;height:0;" onchange="showToast('Preference updated', 'success')">
+                                        <span class="slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;border-radius:20px;transition:.4s;"></span>
+                                    </label>
+                                </div>
+                                <div class="ms-row"
+                                    style="padding:10px 14px;justify-content:space-between;align-items:center;">
+                                    <span style="font-size:12px;">Payment Reminders</span>
+                                    <label class="switch" style="position:relative;display:inline-block;width:36px;height:20px;">
+                                        <input type="checkbox" style="opacity:0;width:0;height:0;" onchange="showToast('Preference updated', 'success')">
+                                        <span class="slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;border-radius:20px;transition:.4s;"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card anim-up">
+                            <div class="sec-title" style="margin-bottom:14px;">🔐 Security</div>
+                            <div class="monthly-summary" style="gap:6px;">
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Two-Factor Auth</span><span
+                                        class="badge badge-green">Enabled</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Last Password
+                                        Change</span><span>15 Jan 2026</span></div>
+                                <div class="ms-row" style="padding:9px 14px;"><span
+                                        style="color:var(--txt-muted);font-size:11px;">Session Timeout</span><span>8
+                                        hours</span></div>
+                            </div>
+                            <div style="margin-top:16px;">
+                                <button class="btn btn-secondary btn-block" style="font-size:12px;" onclick="openChangePwd()">🔑 Change
+                                    Password</button>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /tab-settings -->
+
+            </div><!-- /page-body -->
+        </div><!-- /main-content -->
+    </div><!-- /app-shell -->
+
+    <!-- ══ CHANGE PASSWORD MODAL ══ -->
+    <div id="change-pwd-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#0d1f35;border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:32px;width:90%;max-width:460px;box-shadow:0 24px 60px rgba(0,0,0,0.6);">
+            <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;">🔒 Change Password</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:20px;">Enter your current password and choose a strong new one.</div>
+            <div id="cp-error" style="display:none;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#fca5a5;margin-bottom:16px;"></div>
+            <div style="display:grid;gap:16px;">
+                <div>
+                    <label style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;">Current Password</label>
+                    <div style="position:relative;">
+                        <input id="cp-cur" type="password" placeholder="Enter current password"
+                            style="width:100%;padding:10px 40px 10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;color:#fff;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;"
+                            onfocus="this.style.borderColor='#00C853'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" />
+                        <span onclick="togglePwdField('cp-cur')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;opacity:0.5;" title="Show/Hide">👁</span>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;">New Password</label>
+                    <div style="position:relative;">
+                        <input id="cp-new" type="password" placeholder="At least 8 characters"
+                            style="width:100%;padding:10px 40px 10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;color:#fff;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;"
+                            onfocus="this.style.borderColor='#00C853'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" oninput="updatePwdStrength()" />
+                        <span onclick="togglePwdField('cp-new')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;opacity:0.5;" title="Show/Hide">👁</span>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <div style="height:4px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;">
+                            <div id="cp-strength-bar" style="height:100%;width:0%;border-radius:4px;transition:width .3s,background .3s;"></div>
+                        </div>
+                        <div id="cp-strength-lbl" style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px;"></div>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;">Confirm New Password</label>
+                    <div style="position:relative;">
+                        <input id="cp-conf" type="password" placeholder="Repeat new password"
+                            style="width:100%;padding:10px 40px 10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;color:#fff;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;"
+                            onfocus="this.style.borderColor='#00C853'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" />
+                        <span onclick="togglePwdField('cp-conf')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;opacity:0.5;" title="Show/Hide">👁</span>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:24px;justify-content:flex-end;">
+                <button onclick="closeChangePwd()" style="padding:10px 20px;border-radius:9px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+                <button id="cp-save-btn" onclick="saveChangePwd()" style="padding:10px 22px;border-radius:9px;border:none;background:linear-gradient(135deg,#1a6fd4,#5ba8f5);color:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(26,111,212,0.35);">🔒 Update Password</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ════════════════════════════════════════════════════════════
+           dashboard.js — inline dashboard logic
+        ════════════════════════════════════════════════════════════ */
+        "use strict";
+
+        // ── Auth guard ──────────────────────────────────────────────
+        const USER = requireAuth();
+        const SUMMARY = getMonthlySummary(USER.tariff || 5.00);
+
+        // ── Tab navigation ─────────────────────────────────────────
+        let activeTab = "dashboard";
+        let chartsReady = false;
+
+        function showTab(name) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.sb-nav-item').forEach(i => i.classList.remove('active'));
+            const panel = document.getElementById('tab-' + name);
+            if (panel) panel.classList.add('active');
+            // Highlight correct nav item by id
+            const idMap = { dashboard: 'snav-overview', solar: 'snav-solar', battery: 'snav-battery', payment: 'snav-payment', download: 'snav-download', qr: 'snav-qr', profile: 'snav-profile', settings: 'snav-settings', daily: '', charts: '', bill: '' };
+            const activeId = idMap[name];
+            if (activeId) { const el = document.getElementById(activeId); if (el) el.classList.add('active'); }
+            const titles = { dashboard: 'Overview', solar: 'Solar Generation', battery: 'Battery Status', payment: 'Payment History', download: 'Download Bill', qr: 'Scan QR Code', profile: 'My Profile', settings: 'Settings', daily: 'Daily Report', charts: 'Analytics', bill: 'Bill & Export' };
+            document.getElementById('page-title').textContent = titles[name] || 'Dashboard';
+            activeTab = name;
+            if (name === 'charts' && !chartsReady) { initFullCharts(); chartsReady = true; }
+            if (name === 'solar' && !window._solarReady) { initSolarTab(); window._solarReady = true; }
+            if (name === 'battery' && !window._batteryReady) { initBatteryTab(); window._batteryReady = true; }
+            if (name === 'payment' && !window._payReady) { initPaymentTab(); window._payReady = true; }
+            if (name === 'download' && !window._dlReady) { initDownloadTab(); window._dlReady = true; }
+            if (name === 'qr' && !window._qrTabReady) { initQRTab(); window._qrTabReady = true; }
+            closeSidebar();
+        }
+
+        // ── Sidebar (mobile) ───────────────────────────────────────
+        function openSidebar() { document.getElementById("sidebar").classList.add("open"); document.getElementById("overlay").classList.add("show"); }
+        function closeSidebar() { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); }
+
+        // ── Admin navigation ───────────────────────────────────────
+        function navigateToAdmin() {
+            closeSidebar();
+            document.body.style.transition = "opacity .35s ease";
+            document.body.style.opacity = "0";
+            setTimeout(() => { window.location.href = "admin-home.html"; }, 360);
+        }
+
+        // ── Live clock ─────────────────────────────────────────────
+        function updateClock() {
+            const now = new Date();
+            const timeWithSec = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+            const timeNoSec = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+            
+            document.getElementById("live-clock").textContent = timeWithSec;
+            document.getElementById("sb-date").textContent = now.toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+            
+            // Sync Solar Generation panel times if they are active
+            const solTimeEl = document.getElementById("sol-time-now");
+            if (solTimeEl && solTimeEl.textContent !== '—') solTimeEl.textContent = timeWithSec; // Sync exact time including seconds
+            
+            const solDateSubEl = document.getElementById("sol-date-sub");
+            if (solDateSubEl && solDateSubEl.textContent !== 'Loading…') {
+                const parts = solDateSubEl.textContent.split('|');
+                if (parts.length === 3) {
+                    solDateSubEl.textContent = `${parts[0].trim()}  |  ${parts[1].trim()}  |  ${timeWithSec}`;
+                }
+            }
+            
+            const thDateSubEl = document.getElementById("th-date-sub");
+            if (thDateSubEl && thDateSubEl.textContent !== '—') {
+                const today = SOLAR_DATA[SOLAR_DATA.length - 1];
+                thDateSubEl.textContent = `${today.date} | ${timeWithSec}  —  ${today.day}  |  Billing Period: ${SUMMARY.period}`;
+            }
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        // ── Helper ─────────────────────────────────────────────────
+        function numberToWords(num) {
+            num = Math.floor(num);
+            if (num === 0) return 'Zero Rupees Only';
+            const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+            const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+            if (!n) return '';
+            let str = '';
+            str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+            str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+            str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+            str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+            str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+            return str.trim() + ' Rupees Only';
+        }
+
+        // ── Populate all dynamic fields ────────────────────────────
+        (function populate() {
+            const S = SUMMARY;
+            const tariff = USER.tariff || 5.00;
+
+            // Sidebar
+            try {
+                const uName = USER.name || USER.username || "Consumer";
+                setText("sb-av", uName.charAt(0).toUpperCase());
+                setText("sb-uname", uName);
+                setText("sb-urole", USER.role === "admin" ? "Administrator" : "☀ Consumer");
+            } catch (e) {
+                console.warn("Sidebar population failed:", e);
+            }
+
+            try {
+                // Today banner (last record)
+                const today = SOLAR_DATA[SOLAR_DATA.length - 1];
+                setText("th-date-sub", `${today.date} | ${today.time}  —  ${today.day}  |  Billing Period: ${S.period}`);
+                setText("td-gen", today.gen + " kWh");
+                setText("td-used", today.used + " kWh");
+                setText("td-exp", today.exported + " kWh");
+            } catch (e) {
+                console.warn("[Dashboard] Banner population failed:", e);
+            }
+
+            try {
+                // Stat cards
+                const expPct = S.totalGen ? Math.round(S.totalExported / S.totalGen * 100) : 0;
+                const usdPct = S.totalGen ? Math.round(S.totalUsed / S.totalGen * 100) : 0;
+                setText("sc-gen", S.totalGen + "");
+                setText("sc-used", S.totalUsed + "");
+                setText("sc-exp", S.totalExported + "");
+                setText("sc-amt", formatINR(S.totalAmount));
+                setText("sc-sub-gen", "87% of 500 kWh capacity target");
+                setText("sc-sub-used", usdPct + "% of generated energy used at home");
+                setText("sc-sub-exp", expPct + "% of generated energy exported");
+                setText("sc-sub-amt", `@₹${tariff.toFixed(2)}/kWh × ${S.totalExported} kWh exported`);
+                setText("sc-trend-amt", "+₹" + (S.totalAmount * 0.05).toFixed(0));
+                document.getElementById("sc-bar-gen").style.width = "87%";
+                document.getElementById("sc-bar-used").style.width = usdPct + "%";
+                document.getElementById("sc-bar-exp").style.width = expPct + "%";
+            } catch (e) {
+                console.warn("[Dashboard] Stat cards population failed:", e);
+            }
+
+            // Monthly summary sidebar
+            try {
+                setText("ms-gen", S.totalGen + " kWh");
+                setText("ms-used", S.totalUsed + " kWh");
+                setText("ms-exp", S.totalExported + " kWh");
+                setText("ms-amt", formatINR(S.totalAmount));
+                setText("ms-period", S.period);
+                setText("ms-tariff", formatINR(tariff) + " / kWh");
+                
+                // Daily report badge
+                setText("dr-badge-total", S.totalGen + " kWh Total");
+            } catch (e) {
+                console.warn("Monthly summary sidebar failed:", e);
+            }
+
+            // Bill fields
+            try {
+                const uName = USER.name || USER.username || "Consumer";
+                const svcNo = USER.serviceNumber || "0000000000";
+                const billId = `TN-SOLAR-2026-05-${svcNo.replace(/\D/g, "").slice(-4)}`;
+                setText("bill-id", billId);
+                setText("bill-name", uName);
+                setText("bill-svc", svcNo);
+                setText("bill-addr", USER.address || "Pending Setup");
+                setText("bill-sec", USER.section || "Pending Setup");
+                setText("bill-period", S.period);
+                setText("bill-gendate", `${S.billedOn} | 01:24 PM`);
+                setText("bill-due", S.dueDate);
+                setText("bill-ic-gen", S.totalGen + " kWh");
+                setText("bill-ic-used", S.totalUsed + " kWh");
+                setText("bill-ic-exp", S.totalExported + " kWh");
+                setText("bill-formula-detail", `${S.totalExported} kWh × ₹${tariff.toFixed(2)} per kWh = ${formatINR(S.totalAmount)}  |  Credit Period: May 2026`);
+                setText("bill-total", formatINR(S.totalAmount));
+                setText("bill-words", numberToWords(S.totalAmount));
+                setText("settle-credit", formatINR(S.totalAmount));
+                setText("settle-tariff", formatINR(tariff) + "/kWh");
+                setText("settle-ref", "TNPDCL" + S.billedOn.replace(/-/g, "") + "0001");
+                setText("settle-meter", USER.meterSerial || "—");
+                setText("stamp-date", S.billedOn);
+            } catch (e) {
+                console.warn("Bill fields population failed:", e);
+            }
+            setText("bill-sig-name", USER.name);
+            setText("doc-id", Math.floor(10000 + Math.random() * 89999).toString());
+
+            // Profile
+            setText("pf-avatar", USER.name.charAt(0).toUpperCase());
+            setText("pf-name", USER.name);
+            setText("pf-role", USER.role === "admin" ? "Administrator" : "Consumer");
+            setText("pf-svc", USER.serviceNumber);
+            setText("pf-addr", USER.address);
+            setText("pf-sec", USER.section);
+            setText("pf-mobile", USER.mobile || "N/A");
+            setText("pf-email", USER.email || "N/A");
+            setText("pf-cap", USER.capacity || "N/A");
+            setText("pf-meter", USER.meterSerial || "N/A");
+            setText("pf-tariff", formatINR(tariff) + " / kWh");
+            setText("sess-user", USER.username);
+            setText("sess-time", new Date(USER.loginTime).toLocaleString("en-IN"));
+        })();
+
+        // ── Recent daily log table (last 7 days) ───────────────────
+        (function buildRecentTable() {
+            const last7 = SOLAR_DATA.slice(-7);
+            const tbody = document.getElementById("recent-tbl-body");
+            tbody.innerHTML = "";
+            last7.forEach((r, idx) => {
+                const isToday = idx === last7.length - 1;
+                tbody.innerHTML += `
+      <tr class="${isToday ? "row-today" : ""}">
+        <td><div class="dt-cell"><span class="dt-date">${r.date}</span><span class="dt-time">${r.time}</span></div></td>
+        <td class="td-muted">${r.day}</td>
+        <td class="td-green">${r.gen}</td>
+        <td class="td-blue">${r.used}</td>
+        <td class="td-gold">${r.exported}</td>
+        <td><span class="badge badge-${r.balance > 0 ? "green" : "purple"}">${r.balance} kWh</span></td>
+      </tr>`;
+            });
+        })();
+
+        // ── Full daily table ────────────────────────────────────────
+        (function buildFullTable() {
+            const tbody = document.getElementById("full-tbl-body");
+            const tariff = USER.tariff || 5.00;
+            let tGen = 0, tUsed = 0, tExp = 0, tAmt = 0;
+            tbody.innerHTML = "";
+            SOLAR_DATA.forEach((r, i) => {
+                const amt = parseFloat((r.exported * tariff).toFixed(2));
+                tGen += r.gen; tUsed += r.used; tExp += r.exported; tAmt += amt;
+                tbody.innerHTML += `
+      <tr>
+        <td class="td-muted">${i + 1}</td>
+        <td><div class="dt-cell"><span class="dt-date">${r.date}</span><span class="dt-time">${r.time}</span></div></td>
+        <td class="td-muted">${r.day}</td>
+        <td class="td-green">${r.gen} kWh</td>
+        <td class="td-blue">${r.used} kWh</td>
+        <td class="td-gold">${r.exported} kWh</td>
+        <td><span class="badge badge-${r.balance > 0 ? "green" : "blue"}">${r.balance} kWh</span></td>
+        <td class="td-gold">${formatINR(amt)}</td>
+      </tr>`;
+            });
+            setText("ft-gen", tGen.toFixed(2) + " kWh");
+            setText("ft-used", tUsed.toFixed(2) + " kWh");
+            setText("ft-exp", tExp.toFixed(2) + " kWh");
+            setText("ft-amt", formatINR(tAmt));
+        })();
+
+        // ── CSV Export ─────────────────────────────────────────────
+        function exportSolarReport() {
+            exportSolarCSV(USER.tariff || 5.00);
+            showToast("CSV report downloaded! 📥", "success");
+        }
+
+        // ── Charts shared config ────────────────────────────────────
+        const FONT = { family: "'Inter', sans-serif", size: 9 };
+        const GRID_COLOR = "rgba(255,255,255,.06)";
+        const TICK_COLOR = "rgba(255,255,255,.4)";
+
+        const baseOpts = {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { backgroundColor: "rgba(17,24,39,.95)", titleFont: { ...FONT, weight: "700", size: 11 }, bodyFont: FONT, padding: 10, cornerRadius: 8, borderColor: "rgba(255,255,255,.1)", borderWidth: 1 }
+            },
+            scales: {
+                x: { ticks: { font: FONT, color: TICK_COLOR, maxRotation: 45 }, grid: { display: false } },
+                y: { ticks: { font: FONT, color: TICK_COLOR }, grid: { color: GRID_COLOR }, beginAtZero: true }
+            }
+        };
+        const ALL_LABELS = SOLAR_DATA.map(r => r.date.slice(0, 5));
+
+        // ── Mini chart (last 7 days) ────────────────────────────────
+        try {
+            if (typeof Chart !== 'undefined') {
+                new Chart(document.getElementById("chart-mini"), {
+                    type: "line",
+                    data: {
+                        labels: SOLAR_DATA.slice(-7).map(r => r.date.slice(0, 5)),
+                        datasets: [
+                            { label: "Generated", data: SOLAR_DATA.slice(-7).map(r => r.gen), borderColor: "#00b96b", backgroundColor: "rgba(0,185,107,.12)", borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: "#00b96b", fill: true, tension: .4 },
+                            { label: "Home Used", data: SOLAR_DATA.slice(-7).map(r => r.used), borderColor: "#5ba8f5", backgroundColor: "rgba(91,168,245,.1)", borderWidth: 2, pointRadius: 3, pointBackgroundColor: "#5ba8f5", fill: false, tension: .4 },
+                            { label: "Exported", data: SOLAR_DATA.slice(-7).map(r => r.exported), borderColor: "#f7a600", backgroundColor: "rgba(247,166,0,.1)", borderWidth: 2, pointRadius: 3, pointBackgroundColor: "#f7a600", fill: false, tension: .4, borderDash: [5, 4] }
+                        ]
+                    },
+                    options: { ...baseOpts, plugins: { ...baseOpts.plugins, legend: { display: true, labels: { color: "rgba(255,255,255,.65)", font: FONT, boxWidth: 12, padding: 14 } } } }
+                });
+            } else {
+                console.warn("[Dashboard] Chart.js not loaded. Skipping mini chart.");
+            }
+        } catch (e) {
+            console.error("[Dashboard] Mini chart error:", e);
+        }
+
+        // ── Full analytics charts (lazy) ────────────────────────────
+        function initFullCharts() {
+            new Chart(document.getElementById("chart-gen"), {
+                type: "bar",
+                data: { labels: ALL_LABELS, datasets: [{ label: "Solar Generated (kWh)", data: SOLAR_DATA.map(r => r.gen), backgroundColor: SOLAR_DATA.map((_, i) => i % 2 === 0 ? "rgba(247,166,0,.85)" : "rgba(232,140,0,.85)"), borderColor: "rgba(200,110,0,.9)", borderWidth: 1, borderRadius: 4, borderSkipped: false }] },
+                options: baseOpts
+            });
+            new Chart(document.getElementById("chart-exp"), {
+                type: "bar",
+                data: { labels: ALL_LABELS, datasets: [{ label: "Exported to EB (kWh)", data: SOLAR_DATA.map(r => r.exported), backgroundColor: SOLAR_DATA.map((_, i) => i % 2 === 0 ? "rgba(0,185,107,.85)" : "rgba(0,146,85,.85)"), borderColor: "rgba(0,110,60,.9)", borderWidth: 1, borderRadius: 4, borderSkipped: false }] },
+                options: baseOpts
+            });
+            new Chart(document.getElementById("chart-compare"), {
+                type: "line",
+                data: {
+                    labels: ALL_LABELS, datasets: [
+                        { label: "Generated", data: SOLAR_DATA.map(r => r.gen), borderColor: "#f7a600", backgroundColor: "rgba(247,166,0,.08)", fill: true, tension: .4, borderWidth: 2.5, pointRadius: 0 },
+                        { label: "Home Used", data: SOLAR_DATA.map(r => r.used), borderColor: "#5ba8f5", backgroundColor: "rgba(91,168,245,.08)", fill: true, tension: .4, borderWidth: 2, pointRadius: 0 },
+                        { label: "Exported", data: SOLAR_DATA.map(r => r.exported), borderColor: "#00b96b", backgroundColor: "rgba(0,185,107,.08)", fill: true, tension: .4, borderWidth: 2, pointRadius: 0, borderDash: [6, 4] }
+                    ]
+                },
+                options: { ...baseOpts, plugins: { ...baseOpts.plugins, legend: { display: true, labels: { color: "rgba(255,255,255,.65)", font: FONT, boxWidth: 12, padding: 16 } } } }
+            });
+            new Chart(document.getElementById("chart-pie"), {
+                type: "doughnut",
+                data: { labels: [`Home Used (${SUMMARY.totalUsed} kWh)`, `Exported (${SUMMARY.totalExported} kWh)`], datasets: [{ data: [SUMMARY.totalUsed, SUMMARY.totalExported], backgroundColor: ["rgba(91,168,245,.8)", "rgba(0,185,107,.8)"], borderColor: ["#5ba8f5", "#00b96b"], borderWidth: 2, hoverOffset: 8 }] },
+                options: { responsive: true, plugins: { legend: { display: true, position: "bottom", labels: { color: "rgba(255,255,255,.65)", font: FONT, padding: 14 } }, tooltip: { ...baseOpts.plugins.tooltip } }, cutout: "65%" }
+            });
+            let cum = 0;
+            new Chart(document.getElementById("chart-cumul"), {
+                type: "line",
+                data: { labels: ALL_LABELS, datasets: [{ label: "Cumulative (kWh)", data: SOLAR_DATA.map(r => { cum += r.gen; return parseFloat(cum.toFixed(2)); }), borderColor: "#00b96b", backgroundColor: "rgba(0,185,107,.15)", fill: true, tension: .4, borderWidth: 2.5, pointRadius: 0 }] },
+                options: { ...baseOpts, plugins: { ...baseOpts.plugins, legend: { display: false } } }
+            });
+        }
+
+        // ── QR Code removed from bill tab
+
+        // ── Barcode ──────────────────────────────────────────────────
+        try {
+            setText('barcode-num', USER.serviceNumber);
+            if (typeof JsBarcode !== 'undefined') {
+                JsBarcode('#barcode-svg', USER.serviceNumber, {
+                    format: 'CODE128', width: 1.4, height: 50,
+                    displayValue: false, background: '#ffffff',
+                    lineColor: '#000000', margin: 4
+                });
+            }
+        } catch (e) {
+            console.warn("[Dashboard] Barcode gen failed:", e);
+        }
+
+        /* ════════ SOLAR GENERATION TAB ════════ */
+        function initSolarTab() {
+            const now = new Date();
+            const hr = now.getHours();
+            const today = SOLAR_DATA[SOLAR_DATA.length - 1];
+            setText('sol-date-sub', `${today.date}  |  ${today.day}  |  ${now.toLocaleTimeString('en-IN', { hour12: true, hour: '2-digit', minute: '2-digit' })}`);
+            setText('sol-gen-today', today.gen + ' kWh');
+            const liveKW = (Math.sin((hr / 24) * Math.PI) * 3.8 + Math.random() * 0.4).toFixed(2);
+            setText('sol-output-live', hr >= 6 && hr <= 18 ? liveKW + ' kW' : '0.00 kW');
+            setText('sol-time-now', now.toLocaleTimeString('en-IN', { hour12: true, hour: '2-digit', minute: '2-digit' }));
+            setText('sol-peak-ind', '2.8× avg demand');
+            setText('sol-eff', (today.gen / 10 * 100).toFixed(1) + '%');
+            setText('sum-generated', today.gen);
+            setText('sum-used', today.used);
+            setText('sum-sold', today.exported);
+            const imp = parseFloat((today.used - today.gen + today.exported).toFixed(2));
+            setText('sum-imported', imp > 0 ? imp : '0.00');
+            // Hourly data (24h)
+            const hrs = Array.from({ length: 24 }, (_, i) => i);
+            const hrlabels = hrs.map(h => h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : (h - 12) + 'pm');
+            const genByHr = hrs.map(h => { if (h < 6 || h > 19) return 0; const peak = h >= 9 && h <= 15; return parseFloat((Math.sin((h - 6) / 13 * Math.PI) * (peak ? 3.8 : 2.2) + Math.random() * 0.3).toFixed(2)); });
+            const consByHr = hrs.map(h => { const night = h < 6 || h > 22; const eve = h >= 17 && h <= 21; return parseFloat((night ? 0.2 + Math.random() * 0.1 : eve ? 1.8 + Math.random() * 0.6 : 0.5 + Math.random() * 0.8).toFixed(2)); });
+            const genColors = genByHr.map(v => v <= 1 ? 'rgba(0,185,107,.75)' : v <= 2.5 ? 'rgba(255,193,7,.8)' : 'rgba(239,68,68,.8)');
+            const consColors = consByHr.map(v => v <= 0.5 ? 'rgba(0,185,107,.75)' : v <= 1.2 ? 'rgba(255,193,7,.8)' : 'rgba(239,68,68,.8)');
+            const cOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,22,46,.92)', titleColor: '#fff', bodyColor: 'rgba(255,255,255,.7)', cornerRadius: 8, padding: 10 } }, scales: { x: { ticks: { color: 'rgba(255,255,255,.3)', font: { size: 9 }, maxRotation: 0, maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,.03)' } }, y: { ticks: { color: 'rgba(255,255,255,.3)', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true } } };
+            new Chart(document.getElementById('chart-hourly-gen'), { type: 'bar', data: { labels: hrlabels, datasets: [{ label: 'kWh', data: genByHr, backgroundColor: genColors, borderRadius: 3 }] }, options: cOpts });
+            new Chart(document.getElementById('chart-hourly-cons'), { type: 'bar', data: { labels: hrlabels, datasets: [{ label: 'kWh', data: consByHr, backgroundColor: consColors, borderRadius: 3 }] }, options: cOpts });
+        }
+
+        /* ════════ BATTERY TAB ════════ */
+        function initBatteryTab() {
+            const pct = 74;
+            const stored = (pct / 100 * 10).toFixed(1);
+            const remaining = (10 - stored).toFixed(1);
+            document.getElementById('bat-liquid').style.height = pct + '%';
+            document.getElementById('bat-pct-overlay').textContent = pct + '%';
+            document.getElementById('bat-liquid').style.background =
+                pct >= 80 ? 'linear-gradient(0deg,#00b96b,#00C853)' :
+                    pct >= 40 ? 'linear-gradient(0deg,#FFC107,#f97316)' :
+                        'linear-gradient(0deg,#ef4444,#dc2626)';
+            setText('bat-stored', stored + ' kWh');
+            setText('bat-remaining', remaining + ' kWh');
+            // History chart
+            const days7 = SOLAR_DATA.slice(-7);
+            const bOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: 'rgba(255,255,255,.55)', font: { size: 10 }, boxWidth: 12 } } }, scales: { x: { ticks: { color: 'rgba(255,255,255,.3)', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.03)' } }, y: { ticks: { color: 'rgba(255,255,255,.3)', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true, max: 10 } } };
+            new Chart(document.getElementById('chart-battery-hist'), { type: 'bar', data: { labels: days7.map(d => d.date.slice(5)), datasets: [{ label: 'Charged (kWh)', data: days7.map(d => Math.min(10, parseFloat((d.gen * 0.6 + Math.random()).toFixed(1)))), backgroundColor: 'rgba(0,200,83,.6)', borderRadius: 3 }, { label: 'Discharged (kWh)', data: days7.map(d => parseFloat((d.used * 0.5 + Math.random() * 0.3).toFixed(1))), backgroundColor: 'rgba(255,193,7,.6)', borderRadius: 3 }] }, options: bOpts });
+        }
+
+        /* ════════ PAYMENT HISTORY TAB ════════ */
+        const PAYMENT_DATA = [
+            { txn: 'TXN-2026031501', month: 'Mar 2026', amount: '₹437', method: 'UPI / GPay', date: '15-Mar-2026', time: '10:24 AM', status: 'pending' },
+            { txn: 'TXN-2026021401', month: 'Feb 2026', amount: '₹402', method: 'Net Banking', date: '14-Feb-2026', time: '09:15 AM', status: 'paid' },
+            { txn: 'TXN-2026011201', month: 'Jan 2026', amount: '₹389', method: 'UPI / PhonePe', date: '12-Jan-2026', time: '11:42 AM', status: 'paid' },
+            { txn: 'TXN-2025121801', month: 'Dec 2025', amount: '₹376', method: 'Debit Card', date: '18-Dec-2025', time: '02:30 PM', status: 'paid' },
+            { txn: 'TXN-2025111501', month: 'Nov 2025', amount: '₹361', method: 'UPI / GPay', date: '15-Nov-2025', time: '08:55 AM', status: 'paid' },
+            { txn: 'TXN-2025101301', month: 'Oct 2025', amount: '₹344', method: 'Net Banking', date: '13-Oct-2025', time: '04:10 PM', status: 'paid' },
+        ];
+        function initPaymentTab() { setTimeout(filterPayments, 80); }
+        function filterPayments() {
+            const q = (document.getElementById('pay-search') || {}).value || '';
+            const mf = (document.getElementById('pay-month-filter') || {}).value || '';
+            const sort = (document.getElementById('pay-sort') || {}).value || 'desc';
+            let data = PAYMENT_DATA.filter(r =>
+                (!q || r.txn.toLowerCase().includes(q.toLowerCase()) || r.month.toLowerCase().includes(q.toLowerCase()) || r.method.toLowerCase().includes(q.toLowerCase())) &&
+                (!mf || r.month === mf)
+            );
+            if (sort === 'asc') data = data.reverse();
+            const tbody = document.getElementById('payment-tbody');
+            const noRes = document.getElementById('pay-no-results');
+            tbody.innerHTML = '';
+            if (!data.length) { noRes.style.display = 'block'; return; }
+            noRes.style.display = 'none';
+            data.forEach(r => {
+                const pill = r.status === 'paid' ? '<span class="badge badge-green">✅ Paid</span>' : r.status === 'pending' ? '<span class="badge badge-gold">⏳ Pending</span>' : '<span class="badge" style="background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25);">❌ Failed</span>';
+                tbody.innerHTML += `<tr><td style="font-family:'Roboto Mono',monospace;font-size:11px;color:var(--sol-green);">${r.txn}</td><td style="font-weight:600;">${r.month}</td><td style="font-weight:700;">${r.amount}</td><td>${r.method}</td><td>${r.date}</td><td>${r.time}</td><td>${pill}</td></tr>`;
+            });
+        }
+
+        /* ════════ DOWNLOAD BILL TAB ════════ */
+        function initDownloadTab() {
+            setText('dl-name', USER.name);
+            setText('dl-id', USER.serviceNumber);
+            setText('dl-gen', SUMMARY.totalGen + ' kWh');
+            setText('dl-used', SUMMARY.totalUsed + ' kWh');
+            setText('dl-sold', SUMMARY.totalExported + ' kWh');
+            const tariff = USER.tariff || 5;
+            const ebCharge = parseFloat((SUMMARY.totalExported * tariff).toFixed(2));
+            setText('dl-eb', '₹' + ebCharge.toFixed(2));
+            setText('dl-net', formatINR(SUMMARY.totalAmount));
+        }
+
+        function downloadBillPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+                const tariff = USER.tariff || 5;
+                const S = SUMMARY;
+                doc.setFillColor(11, 31, 58); doc.rect(0, 0, 210, 40, 'F');
+                doc.setTextColor(0, 185, 107); doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+                doc.text('TNPDCL — Net Metering Solar Bill', 105, 16, { align: 'center' });
+                doc.setTextColor(255, 255, 255); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+                doc.text('Tamil Nadu Power Distribution Corporation Ltd.', 105, 24, { align: 'center' });
+                doc.text('Solar Division — SolarTrack Pro v2.1', 105, 30, { align: 'center' });
+                doc.setTextColor(0, 185, 107); doc.setFontSize(11);
+                doc.text('Bill ID: TN-SOLAR-2026-03-' + USER.serviceNumber.replace(/\D/g, '').slice(-4), 105, 38, { align: 'center' });
+                let y = 52;
+                doc.setTextColor(30, 30, 30); doc.setFillColor(248, 250, 252); doc.rect(10, y - 6, 190, 8, 'F');
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(11, 31, 58);
+                doc.text('CONSUMER INFORMATION', 14, y); y += 10;
+                const fields = [['Consumer Name', USER.name], ['Service Number', USER.serviceNumber], ['Address', USER.address || 'N/A'], ['Section', USER.section || 'N/A'], ['Billing Period', S.period], ['Bill Generated', S.billedOn + ' ' + S.billedTime], ['Due Date', S.dueDate]];
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+                fields.forEach(([l, v]) => { doc.setTextColor(100, 100, 100); doc.text(l + ':', 14, y); doc.setTextColor(30, 30, 30); doc.setFont('helvetica', 'bold'); doc.text(String(v), 80, y); doc.setFont('helvetica', 'normal'); y += 7; });
+                y += 4;
+                doc.setFillColor(248, 250, 252); doc.rect(10, y - 6, 190, 8, 'F');
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(11, 31, 58);
+                doc.text('ENERGY DETAILS', 14, y); y += 10;
+                const eFields = [['Total Generated', S.totalGen + ' kWh'], ['Total Home Used', S.totalUsed + ' kWh'], ['Total Exported to EB', S.totalExported + ' kWh'], ['EB Tariff Rate', '₹' + tariff.toFixed(2) + '/kWh'], ['EB Credit Earned', '₹' + (S.totalExported * tariff).toFixed(2)], ['Net Payable', formatINR(S.totalAmount)]];
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+                eFields.forEach(([l, v], i) => { doc.setTextColor(100, 100, 100); doc.text(l + ':', 14, y); const isLast = i === eFields.length - 1; doc.setTextColor(isLast ? 0 : 30, isLast ? 185 : 30, isLast ? 107 : 30); doc.setFont('helvetica', 'bold'); doc.text(String(v), 130, y); doc.setFont('helvetica', 'normal'); y += 7; });
+                y += 8;
+                doc.setFillColor(0, 185, 107); doc.rect(10, y, 190, 12, 'F');
+                doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+                doc.text('NET PAYABLE AMOUNT: ' + formatINR(S.totalAmount), 105, y + 8, { align: 'center' });
+                y += 20;
+                doc.setTextColor(100, 100, 100); doc.setFont('helvetica', 'italic'); doc.setFontSize(8);
+                doc.text('Generated by SolarTrack Pro — TNPDCL Net Metering System | ' + new Date().toLocaleString('en-IN'), 105, y, { align: 'center' });
+                doc.text('This is a computer-generated bill. No signature required.', 105, y + 5, { align: 'center' });
+                doc.save('TNPDCL_Solar_Bill_March2026_' + USER.serviceNumber + '.pdf');
+            } catch (e) { alert('PDF generation failed. Please ensure jsPDF is loaded.\n' + e.message); }
+        }
+
+        /* ════════ QR TAB ════════ */
+        const UPI_ID = 'tangedco@sbi';
+        function initQRTab() {
+            setText('qr-consumer', USER.name);
+            setText('qr-svc', USER.serviceNumber);
+            setText('qr-amount', formatINR(SUMMARY.totalAmount));
+            const billId = 'TN-SOLAR-2026-03-' + USER.serviceNumber.replace(/\D/g, '').slice(-4);
+            setText('qr-bill-id', 'Bill ID: ' + billId);
+            const qrEl = document.getElementById('qr-render');
+            if (qrEl && !qrEl.hasChildNodes()) {
+                const svcNo  = USER.serviceNumber || '0000000000';
+                const amount = SUMMARY.totalAmount.toFixed(2);
+                const ref    = 'TN' + svcNo.replace(/\D/g,'').slice(-6);
+                const upiUrl = `upi://pay?pa=${UPI_ID}&pn=TNPDCL%20Net%20Metering&tr=${ref}&am=${amount}&cu=INR&tn=Solar%20Bill%20Payment`;
+                try {
+                    new QRCode(qrEl, {
+                        text: upiUrl,
+                        width: 160, height: 160,
+                        colorDark: '#0B1F3A', colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                } catch(e) { console.warn('QR render failed', e); }
+            }
+        }
+
+        // Populate Download Bill fields on page load if user is on that tab
+        window.addEventListener('DOMContentLoaded', () => {
+            setText('dl-name', USER.name);
+            setText('dl-id', USER.serviceNumber);
+        });
+        /* ── Change Password Modal ── */
+        function openChangePwd() {
+            ['cp-cur', 'cp-new', 'cp-conf'].forEach(id => { document.getElementById(id).value = ''; });
+            const err = document.getElementById('cp-error');
+            err.style.display = 'none'; err.textContent = '';
+            document.getElementById('cp-strength-bar').style.cssText = 'width:0%;';
+            document.getElementById('cp-strength-lbl').textContent = '';
+            document.getElementById('change-pwd-modal').style.display = 'flex';
+        }
+        function closeChangePwd() {
+            document.getElementById('change-pwd-modal').style.display = 'none';
+        }
+        function togglePwdField(id) {
+            const f = document.getElementById(id);
+            const isHidden = f.type === 'password';
+            f.type = isHidden ? 'text' : 'password';
+            const span = f.nextElementSibling;
+            if (span) span.textContent = isHidden ? '🙈' : '👁';
+        }
+        function updatePwdStrength() {
+            const pwd = document.getElementById('cp-new').value;
+            const bar = document.getElementById('cp-strength-bar');
+            const lbl = document.getElementById('cp-strength-lbl');
+            let score = 0;
+            if (pwd.length >= 8) score++;
+            if (pwd.length >= 12) score++;
+            if (/[A-Z]/.test(pwd)) score++;
+            if (/[0-9]/.test(pwd)) score++;
+            if (/[^A-Za-z0-9]/.test(pwd)) score++;
+            const levels = [
+                { pct: '0%', color: 'transparent', text: '' },
+                { pct: '25%', color: '#ef4444', text: '⚠ Weak' },
+                { pct: '50%', color: '#f97316', text: '🔶 Fair' },
+                { pct: '75%', color: '#FFC107', text: '🔷 Good' },
+                { pct: '100%', color: '#00C853', text: '✅ Strong' },
+            ];
+            const s = levels[Math.min(score, 4)];
+            bar.style.width = s.pct; bar.style.background = s.color;
+            lbl.textContent = pwd.length ? s.text : '';
+        }
+        function showCpError(msg) {
+            const err = document.getElementById('cp-error');
+            err.textContent = msg; err.style.display = 'block';
+        }
+        async function saveChangePwd() {
+            const cur = document.getElementById('cp-cur').value;
+            const nw = document.getElementById('cp-new').value;
+            const conf = document.getElementById('cp-conf').value;
+            const btn = document.getElementById('cp-save-btn');
+            
+            if (!cur) { showCpError('⚠ Please enter your current password.'); return; }
+            if (nw.length < 8) { showCpError('⚠ New password must be at least 8 characters.'); return; }
+            if (nw !== conf) { showCpError('❌ Passwords do not match. Please check and try again.'); return; }
+            if (nw === cur) { showCpError('⚠ New password must be different from the current password.'); return; }
+
+            btn.textContent = 'Updating...';
+            btn.disabled = true;
+
+            try {
+                if (typeof FIREBASE_ENABLED !== 'undefined' && FIREBASE_ENABLED && typeof firebaseAuth !== 'undefined' && firebaseAuth.currentUser) {
+                    // Firebase Auth flow
+                    const user = firebaseAuth.currentUser;
+                    const cred = firebase.auth.EmailAuthProvider.credential(user.email, cur);
+                    try {
+                        await user.reauthenticateWithCredential(cred);
+                        await user.updatePassword(nw);
+                    } catch (fbErr) {
+                        if (fbErr.code === 'auth/wrong-password' || fbErr.code === 'auth/invalid-credential') {
+                            throw new Error('Current password is incorrect.');
+                        } else {
+                            throw fbErr;
+                        }
+                    }
+                } else {
+                    // Demo Mode flow
+                    const dynUsers = JSON.parse(localStorage.getItem("solar_registered_consumers") || "[]");
+                    const dynUserIdx = dynUsers.findIndex(u => u.username === USER.username || u.email === USER.email);
+                    
+                    if (dynUserIdx !== -1) {
+                        if (dynUsers[dynUserIdx].password !== cur) throw new Error('Current password is incorrect.');
+                        dynUsers[dynUserIdx].password = nw;
+                        localStorage.setItem("solar_registered_consumers", JSON.stringify(dynUsers));
+                    } else if (USERS_DB[USER.username] && USERS_DB[USER.username].password !== cur) {
+                        throw new Error('Current password is incorrect.');
+                    }
+                }
+
+                closeChangePwd();
+                showToast('🔒 Password updated successfully! Please re-login.', 'success');
+                setTimeout(() => authLogout(), 2500);
+
+            } catch (err) {
+                showCpError('❌ ' + (err.message || 'An error occurred while updating the password.'));
+            } finally {
+                btn.textContent = '🔒 Update Password';
+                btn.disabled = false;
+            }
+        }
+        document.getElementById('change-pwd-modal').addEventListener('click', function (e) { if (e.target === this) closeChangePwd(); });
+        /* ── Live Simulation Feature ── */
+        let liveDemoInterval = null;
+
+        // Battery live-demo state (persists across ticks)
+        let _batPct = 74;      // current charge %
+        let _batRate = 2.1;    // charging rate kW
+
+        function triggerFlash(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('flash-update');
+            void el.offsetWidth;
+            el.classList.add('flash-update');
+        }
+
+        function updateBatteryLiveDemo() {
+            // Slowly charge the battery (0.05–0.15% per tick at 2.5s)
+            _batPct = Math.min(100, _batPct + (Math.random() * 0.10 + 0.05));
+            // Slight rate fluctuation ±0.1 kW
+            _batRate = Math.max(1.5, Math.min(3.0, _batRate + (Math.random() * 0.2 - 0.1)));
+
+            const stored     = (_batPct / 100 * 10).toFixed(1);   // out of 10 kWh
+            const remaining  = (10 - parseFloat(stored)).toFixed(1);
+            const etaHrs     = parseFloat(remaining) / _batRate;
+            const etaH       = Math.floor(etaHrs);
+            const etaM       = Math.round((etaHrs - etaH) * 60);
+            const temp       = (30 + Math.random() * 5).toFixed(0);
+            const tempStatus = parseInt(temp) >= 38 ? '⚠ High' : 'Normal';
+
+            // Update battery visual
+            const liquid = document.getElementById('bat-liquid');
+            const overlay = document.getElementById('bat-pct-overlay');
+            if (liquid) {
+                liquid.style.height = _batPct.toFixed(1) + '%';
+                // Color: green when charging well, amber if very high
+                if (_batPct >= 95) {
+                    liquid.style.background = 'linear-gradient(0deg,#00C853,#69f0ae)';
+                } else if (_batPct >= 60) {
+                    liquid.style.background = 'linear-gradient(0deg,#00b96b,#00C853)';
+                } else {
+                    liquid.style.background = 'linear-gradient(0deg,#FFC107,#ffeb3b)';
+                }
+            }
+            if (overlay) overlay.textContent = Math.round(_batPct) + '%';
+
+            // Update status badge
+            const badge = document.getElementById('bat-status-badge');
+            if (badge) {
+                if (_batPct >= 100) {
+                    badge.textContent = '✅ Full';
+                    badge.style.background = 'rgba(0,200,83,.12)';
+                    badge.style.borderColor = 'rgba(0,200,83,.3)';
+                    badge.style.color = '#00C853';
+                } else {
+                    badge.textContent = '⚡ Charging';
+                    badge.style.background = 'rgba(0,200,83,.12)';
+                    badge.style.borderColor = 'rgba(0,200,83,.3)';
+                    badge.style.color = '#00C853';
+                }
+            }
+
+            // Update detail rows
+            const storedEl    = document.getElementById('bat-stored');
+            const rateEl      = document.getElementById('bat-rate');
+            const remainEl    = document.getElementById('bat-remaining');
+            const etaEl       = document.getElementById('bat-eta');
+            const tempEl      = document.getElementById('bat-temp');
+
+            if (storedEl)  { storedEl.textContent  = stored + ' kWh';  triggerFlash('bat-stored'); }
+            if (rateEl)    { rateEl.textContent    = _batRate.toFixed(1) + ' kW'; triggerFlash('bat-rate'); }
+            if (remainEl)  { remainEl.textContent  = remaining + ' kWh'; triggerFlash('bat-remaining'); }
+            if (etaEl)     { etaEl.textContent     = _batPct >= 100 ? 'Fully Charged' : (etaH > 0 ? etaH + 'h ' : '') + etaM + 'm'; triggerFlash('bat-eta'); }
+            if (tempEl)    { tempEl.textContent    = temp + '°C — ' + tempStatus; triggerFlash('bat-temp'); }
+        }
+
+        function toggleLiveDemo() {
+            const isLive = document.getElementById('live-demo-toggle').checked;
+            const dot = document.getElementById('live-dot');
+
+            if (isLive) {
+                // Pulse effect
+                dot.style.animation = "pulseLive 1.5s infinite";
+                dot.style.opacity = "1";
+                
+                // Start interval
+                liveDemoInterval = setInterval(() => {
+                    // ── Update Today's banner ──
+                    let genTxt = document.getElementById('td-gen').innerText;
+                    let expTxt = document.getElementById('td-exp').innerText;
+                    let curGen = parseFloat(genTxt);
+                    let curExp = parseFloat(expTxt);
+                    
+                    if (!isNaN(curGen)) {
+                        curGen += (Math.random() * 0.05 + 0.01);
+                        curExp += (Math.random() * 0.03 + 0.01);
+                        document.getElementById('td-gen').innerText = curGen.toFixed(2) + " kWh";
+                        document.getElementById('td-exp').innerText = curExp.toFixed(2) + " kWh";
+                        triggerFlash('td-gen');
+                        triggerFlash('td-exp');
+                    }
+                    
+                    // ── Update main stat cards ──
+                    let scGen = parseFloat(document.getElementById('sc-gen').innerText.replace(/,/g, ''));
+                    let scExp = parseFloat(document.getElementById('sc-exp').innerText.replace(/,/g, ''));
+                    if (!isNaN(scGen)) {
+                        scGen += (Math.random() * 0.05 + 0.01);
+                        scExp += (Math.random() * 0.03 + 0.01);
+                        document.getElementById('sc-gen').innerText = scGen.toFixed(2);
+                        document.getElementById('sc-exp').innerText = scExp.toFixed(2);
+                        triggerFlash('sc-gen');
+                        triggerFlash('sc-exp');
+                    }
+
+                    // ── Update Battery Tab ──
+                    updateBatteryLiveDemo();
+
+                }, 2500); // update every 2.5 seconds
+                
+                showToast("🔴 Live Simulation Started: Sensor feed activated.", "info");
+            } else {
+                dot.style.animation = "none";
+                dot.style.opacity = "0.3";
+                clearInterval(liveDemoInterval);
+                showToast("Live Simulation Stopped.", "warning");
+            }
+        }
+    </script>
+</body>
+
+</html>

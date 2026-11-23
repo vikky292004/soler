@@ -1,0 +1,17 @@
+{
+  "name": "SolarTrack Pro",
+  "short_name": "SolarTrack",
+  "description": "TNPDCL Net Metering System",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f1623",
+  "theme_color": "#00b96b",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

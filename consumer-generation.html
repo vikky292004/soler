@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Solar Generation — SolarTrack Pro</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;600&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="consumer-sidebar.css" />
+    <style>
+        :root {
+            --green: #00C853;
+            --sb-w: 64px;
+            --sb-expanded: 260px;
+            --ease: cubic-bezier(.4, 0, .2, 1)
+        }
+
+        body {
+            animation: fi .4s ease
+        }
+
+        @keyframes fi {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        /* ── SIDEBAR & TOPBAR styles now shared via consumer-sidebar.css ── */
+
+
+        .tb-logout {
+            padding: 7px 16px;
+            border-radius: 8px;
+            background: rgba(239, 68, 68, .12);
+            border: 1px solid rgba(239, 68, 68, .25);
+            color: #fca5a5;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        .tb-logout:hover {
+            background: rgba(239, 68, 68, .22)
+        }
+
+        .tb-clock {
+            font-size: 12px;
+            color: var(--green);
+            font-weight: 700;
+            font-family: 'Roboto Mono', monospace
+        }
+
+        .page-body {
+            padding: 24px;
+            flex: 1
+        }
+
+        .section-hd {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            margin-bottom: 16px
+        }
+
+        .section-hd::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, .07)
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .sc {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            padding: 20px;
+            transition: all .3s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .sc:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, .35)
+        }
+
+        .sc::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 14px 14px 0 0
+        }
+
+        .sc-green::before {
+            background: linear-gradient(90deg, #00C853, #00b96b)
+        }
+
+        .sc-gold::before {
+            background: linear-gradient(90deg, #FFC107, #f97316)
+        }
+
+        .sc-blue::before {
+            background: linear-gradient(90deg, #1a6fd4, #5ba8f5)
+        }
+
+        .sc-red::before {
+            background: linear-gradient(90deg, #ef4444, #dc2626)
+        }
+
+        .sc-purple::before {
+            background: linear-gradient(90deg, #8b5cf6, #6d28d9)
+        }
+
+        .sc-icon {
+            font-size: 22px;
+            margin-bottom: 10px
+        }
+
+        .sc-val {
+            font-size: 24px;
+            font-weight: 900;
+            line-height: 1
+        }
+
+        .sc-green .sc-val {
+            color: #00C853
+        }
+
+        .sc-gold .sc-val {
+            color: #FFC107
+        }
+
+        .sc-blue .sc-val {
+            color: #5ba8f5
+        }
+
+        .sc-red .sc-val {
+            color: #f87171
+        }
+
+        .sc-purple .sc-val {
+            color: #c4b5fd
+        }
+
+        .sc-lbl {
+            font-size: 11px;
+            color: rgba(255, 255, 255, .4);
+            margin-top: 6px;
+            font-weight: 500
+        }
+
+        .sc-sub {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .25);
+            margin-top: 3px
+        }
+
+        /* Progress bar */
+        .prog-card {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 24px
+        }
+
+        .prog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px
+        }
+
+        .prog-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #fff
+        }
+
+        .prog-pct {
+            font-size: 20px;
+            font-weight: 900
+        }
+
+        .prog-bar-bg {
+            background: rgba(255, 255, 255, .07);
+            border-radius: 20px;
+            height: 16px;
+            overflow: hidden;
+            margin-bottom: 8px
+        }
+
+        .prog-bar-fill {
+            height: 100%;
+            border-radius: 20px;
+            transition: width 1s ease
+        }
+
+        .prog-green {
+            background: linear-gradient(90deg, #00C853, #00b96b)
+        }
+
+        .prog-yellow {
+            background: linear-gradient(90deg, #FFC107, #f97316)
+        }
+
+        .prog-red {
+            background: linear-gradient(90deg, #ef4444, #dc2626)
+        }
+
+        .prog-scale {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: rgba(255, 255, 255, .3)
+        }
+
+        .panel {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 24px
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 16px
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 240px
+        }
+
+        /* Input override */
+        .input-panel {
+            background: linear-gradient(135deg, rgba(0, 200, 83, .06), rgba(26, 111, 212, .04));
+            border: 1px solid rgba(0, 200, 83, .18);
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+            flex-wrap: wrap
+        }
+
+        .ip-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-width: 160px
+        }
+
+        .ip-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .45)
+        }
+
+        .ip-input {
+            background: rgba(255, 255, 255, .07);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 9px;
+            color: #f0f4ff;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            padding: 10px 14px;
+            outline: none;
+            transition: border-color .2s;
+            width: 100%
+        }
+
+        .ip-input:focus {
+            border-color: rgba(0, 200, 83, .55);
+            background: rgba(0, 200, 83, .05)
+        }
+
+        .btn-calc {
+            padding: 11px 24px;
+            border-radius: 9px;
+            border: none;
+            background: linear-gradient(135deg, #00C853, #00b96b);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all .25s;
+            box-shadow: 0 3px 14px rgba(0, 200, 83, .35);
+            flex-shrink: 0
+        }
+
+        .btn-calc:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(0, 200, 83, .5)
+        }
+
+        /* daily table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px
+        }
+
+        th {
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, .07)
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, .04);
+            color: rgba(255, 255, 255, .7)
+        }
+
+        tr:last-child td {
+            border-bottom: none
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, .02)
+        }
+
+        .tg {
+            color: #00C853;
+            font-weight: 700
+        }
+
+        .tgold {
+            color: #FFC107;
+            font-weight: 700
+        }
+
+        .tred {
+            color: #f87171;
+            font-weight: 700
+        }
+
+        .tbl-wrap {
+            overflow-x: auto
+        }
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <div style="display:flex">
+        <div id="overlay" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.5)"></div>
+        <aside class="csb collapsed" id="csb"></aside>
+        <div class="cmain sb-col" id="cmain">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="hbg" id="hbg"><span></span><span></span><span></span></div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="logo.png" width="36" height="36" alt="Logo" style="filter: drop-shadow(0 0 8px rgba(0,185,107,0.3)); flex-shrink:0" />
+                        <div>
+                            <div class="pg-title">☀ Solar Generation</div>
+                            <div class="pg-bc"><a href="index.html" style="color:inherit;text-decoration:none;">Home</a> › My Energy › <a href="consumer-generation.html" style="color:inherit;text-decoration:none;">Solar Generation</a></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <span class="tb-clock" id="tb-clock">—</span>
+                    <button class="tb-logout" onclick="authLogout()">🚪 Logout</button>
+                </div>
+            </header>
+            <div class="page-body">
+
+                <!-- Simulate / Override Input -->
+                <div class="section-hd">⚙ Today's Generation Override</div>
+                <div class="input-panel">
+                    <div class="ip-group">
+                        <div class="ip-label">Today's Generated (kWh, max 10)</div><input class="ip-input" type="number"
+                            id="inp-gen" min="0" max="10" step="0.1" placeholder="e.g. 8.5" />
+                    </div>
+                    <div class="ip-group">
+                        <div class="ip-label">Today's Home Used (kWh)</div><input class="ip-input" type="number"
+                            id="inp-used" min="0" max="30" step="0.1" placeholder="e.g. 6.0" />
+                    </div>
+                    <button class="btn-calc" onclick="recalcToday()">🔄 Recalculate</button>
+                </div>
+
+                <!-- Progress bar -->
+                <div class="section-hd">📊 Today's Generation Gauge</div>
+                <div class="prog-card">
+                    <div class="prog-header">
+                        <div class="prog-title">Daily Generation Progress (0 → 10 kWh max)</div>
+                        <div class="prog-pct" id="prog-pct" style="color:#00C853">0%</div>
+                    </div>
+                    <div class="prog-bar-bg">
+                        <div class="prog-bar-fill prog-green" id="prog-fill" style="width:0%"></div>
+                    </div>
+                    <div class="prog-scale"><span>0 kWh</span><span>2.5 kWh</span><span>5 kWh</span><span>7.5
+                            kWh</span><span>10 kWh ⚡</span></div>
+                    <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,.4)" id="prog-hint">Loading…</div>
+                </div>
+
+                <!-- Cards -->
+                <div class="section-hd">⚡ Today's Summary</div>
+                <div class="cards-grid">
+                    <div class="sc sc-green">
+                        <div class="sc-icon">☀</div>
+                        <div class="sc-val" id="c-gen">—</div>
+                        <div class="sc-lbl">kWh Generated</div>
+                        <div class="sc-sub">Cap: 10 kWh / day</div>
+                    </div>
+                    <div class="sc sc-blue">
+                        <div class="sc-icon">🏠</div>
+                        <div class="sc-val" id="c-used">—</div>
+                        <div class="sc-lbl">kWh Used at Home</div>
+                        <div class="sc-sub">From solar first</div>
+                    </div>
+                    <div class="sc sc-gold">
+                        <div class="sc-icon">⚡</div>
+                        <div class="sc-val" id="c-sold">—</div>
+                        <div class="sc-lbl">kWh Sold to EB</div>
+                        <div class="sc-sub">Exported surplus</div>
+                    </div>
+                    <div class="sc sc-red">
+                        <div class="sc-icon">🔌</div>
+                        <div class="sc-val" id="c-imp">—</div>
+                        <div class="sc-lbl">kWh Imported from EB</div>
+                        <div class="sc-sub">Night/excess usage</div>
+                    </div>
+                    <div class="sc sc-purple">
+                        <div class="sc-icon">₹</div>
+                        <div class="sc-val" id="c-save">—</div>
+                        <div class="sc-lbl">EB Credit Earned</div>
+                        <div class="sc-sub">@₹5/kWh</div>
+                    </div>
+                    <div class="sc sc-green">
+                        <div class="sc-icon">🌱</div>
+                        <div class="sc-val" id="c-co2">—</div>
+                        <div class="sc-lbl">CO₂ Saved (kg)</div>
+                        <div class="sc-sub">0.82 kg per kWh</div>
+                    </div>
+                </div>
+
+                <!-- 27-day chart -->
+                <div class="section-hd">📈 Last 27 Days — Daily Generation</div>
+                <div class="panel">
+                    <div class="chart-wrap"><canvas id="ch-monthly"></canvas></div>
+                </div>
+
+                <!-- Export vs Import chart -->
+                <div class="section-hd">↕ Sold vs Imported (Last 27 Days)</div>
+                <div class="panel">
+                    <div class="chart-wrap"><canvas id="ch-exp-imp"></canvas></div>
+                </div>
+
+                <!-- Daily breakdown table -->
+                <div class="section-hd">🗓 Daily Breakdown (This Month)</div>
+                <div class="panel">
+                    <div class="tbl-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Generated</th>
+                                    <th>Used</th>
+                                    <th>Sold</th>
+                                    <th>Imported</th>
+                                    <th>Savings</th>
+                                    <th>CO₂ Saved</th>
+                                </tr>
+                            </thead>
+                            <tbody id="daily-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+    <script src="energy.js"></script>
+    <script src="consumer-nav.js"></script>
+    <script>
+        let SESSION;
+        try { SESSION = requireAuth('consumer'); } catch (e) { SESSION = null; }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            buildConsumerSidebar('generation');
+            initSidebarToggle();
+        });
+
+        // Clock
+        setInterval(() => { document.getElementById('tb-clock').textContent = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }); }, 1000);
+        document.getElementById('tb-clock').textContent = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
+        function getUser() { return SESSION ? SESSION.username : 'guest'; }
+
+        function renderToday(rec) {
+            document.getElementById('c-gen').textContent = ENERGY.fmt(rec.generated) + ' kWh';
+            document.getElementById('c-used').textContent = ENERGY.fmt(rec.used) + ' kWh';
+            document.getElementById('c-sold').textContent = ENERGY.fmt(rec.sold) + ' kWh';
+            document.getElementById('c-imp').textContent = ENERGY.fmt(rec.imported) + ' kWh';
+            document.getElementById('c-save').textContent = ENERGY.fmtINR(rec.savings);
+            document.getElementById('c-co2').textContent = ENERGY.fmt(rec.co2_saved) + ' kg';
+
+            // Progress bar
+            const pct = Math.min(100, (rec.generated / 10) * 100);
+            const fill = document.getElementById('prog-fill');
+            const pctEl = document.getElementById('prog-pct');
+            fill.style.width = pct + '%';
+            fill.className = 'prog-bar-fill ' + (pct >= 85 ? 'prog-red' : pct >= 55 ? 'prog-yellow' : 'prog-green');
+            pctEl.textContent = pct.toFixed(1) + '%';
+            pctEl.style.color = pct >= 85 ? '#f87171' : pct >= 55 ? '#FFC107' : '#00C853';
+            const hint = rec.generated >= 10 ? '⚡ Maximum 10 kWh daily cap reached!'
+                : rec.sold > 0 ? `✅ ${ENERGY.fmt(rec.sold)} kWh surplus sold to EB (₹ ${ENERGY.fmtINR(rec.savings)} credit)`
+                    : `🔌 ${ENERGY.fmt(rec.imported)} kWh imported from EB for extra home usage`;
+            document.getElementById('prog-hint').textContent = hint;
+        }
+
+        function recalcToday() {
+            const genIn = document.getElementById('inp-gen').value;
+            const usedIn = document.getElementById('inp-used').value;
+            if (!genIn && !usedIn) { return; }
+            const tariff = ENERGY.getTariff(getUser());
+            const gen = genIn ? Math.min(parseFloat(genIn), 10) : ENERGY.getToday(getUser()).generated;
+            const used = usedIn ? parseFloat(usedIn) : ENERGY.getToday(getUser()).used;
+            const rec = ENERGY.calculate(gen, used, tariff);
+            ENERGY.saveDay(getUser(), ENERGY._todayStr(), rec);
+            renderToday(rec);
+            buildCharts();
+            buildTable();
+        }
+
+        let chartMonthly, chartExp;
+        function buildCharts() {
+            const days = ENERGY.getLastNDays(getUser(), 27);
+            const labels = days.map(d => d.date.slice(5));
+            const gens = days.map(d => d.generated);
+            const solds = days.map(d => d.sold);
+            const imps = days.map(d => d.imported);
+
+            const CO = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: 'rgba(255,255,255,.5)', font: { size: 10 }, boxWidth: 10 } } }, scales: { x: { ticks: { color: 'rgba(255,255,255,.35)', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.04)' } }, y: { ticks: { color: 'rgba(255,255,255,.35)', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true, max: 12, title: { display: true, text: 'kWh', color: 'rgba(255,255,255,.3)', font: { size: 9 } } } } };
+
+            if (chartMonthly) chartMonthly.destroy();
+            chartMonthly = new Chart(document.getElementById('ch-monthly'), {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Generated (kWh)', data: gens, backgroundColor: gens.map(v => v >= 10 ? 'rgba(0,200,83,.9)' : 'rgba(0,200,83,.5)'), borderColor: '#00C853', borderWidth: 1, borderRadius: 3 }] },
+                options: { ...CO, plugins: { ...CO.plugins, annotation: { annotations: { line1: { type: 'line', yMin: 10, yMax: 10, borderColor: 'rgba(255,193,7,.6)', borderWidth: 1.5, borderDash: [4, 4], label: { content: '10 kWh max', enabled: true, color: '#FFC107', font: { size: 9 } } } } } } }
+            });
+
+            if (chartExp) chartExp.destroy();
+            chartExp = new Chart(document.getElementById('ch-exp-imp'), {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Sold to EB', data: solds, backgroundColor: 'rgba(0,200,83,.6)', borderColor: '#00C853', borderWidth: 1, borderRadius: 3 }, { label: 'Imported from EB', data: imps, backgroundColor: 'rgba(239,68,68,.5)', borderColor: '#ef4444', borderWidth: 1, borderRadius: 3 }] },
+                options: CO
+            });
+        }
+
+        function buildTable() {
+            const now = new Date();
+            const summary = ENERGY.getMonthSummary(getUser(), `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+            const tbody = document.getElementById('daily-tbody');
+            tbody.innerHTML = '';
+            summary.daily.slice().reverse().forEach(d => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td style="font-size:11px;color:rgba(255,255,255,.5);font-family:'Roboto Mono',monospace">${d.date}</td>
+      <td class="tg">${ENERGY.fmt(d.generated)} kWh</td>
+      <td>${ENERGY.fmt(d.used)} kWh</td>
+      <td class="tgold">${ENERGY.fmt(d.sold)} kWh</td>
+      <td class="tred">${ENERGY.fmt(d.imported)} kWh</td>
+      <td class="tg">${ENERGY.fmtINR(d.savings)}</td>
+      <td>${ENERGY.fmt(d.co2_saved)} kg</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Init
+        const todayRec = ENERGY.getToday(getUser());
+        renderToday(todayRec);
+        buildCharts();
+        buildTable();
+    </script>
+</body>
+
+</html>

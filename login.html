@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <meta name="description" content="SolarTrack Pro — TNPDCL Net Metering System Login" />
+    <title>Login — SolarTrack Pro | TNPDCL Net Metering</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #040e1e;
+        }
+
+        :root {
+            --navy: #0B1F3A;
+            --green: #00C853;
+            --green2: #00b96b;
+            --blue: #1a6fd4;
+            --gold: #FFC107;
+            --red: #ef4444;
+            --border: rgba(255, 255, 255, .12);
+            --ease: cubic-bezier(.4, 0, .2, 1);
+        }
+
+        /* ── ANIMATED BACKGROUND ── */
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #030b15 0%, #061020 40%, #041208 70%, #030b15 100%);
+        }
+
+        .bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(0, 200, 83, .05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 200, 83, .05) 1px, transparent 1px);
+            background-size: 48px 48px;
+            animation: grid-move 18s linear infinite;
+        }
+
+        @keyframes grid-move {
+            to {
+                transform: translateY(48px)
+            }
+        }
+
+        .bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 80% 60% at 20% 40%, rgba(0, 200, 83, .1), transparent 65%),
+                radial-gradient(ellipse 60% 50% at 80% 60%, rgba(26, 111, 212, .1), transparent 65%),
+                radial-gradient(ellipse 50% 40% at 50% 20%, rgba(255, 193, 7, .04), transparent 60%);
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: rise linear infinite;
+        }
+
+        @keyframes rise {
+            0% {
+                transform: translateY(110vh);
+                opacity: 0
+            }
+
+            10% {
+                opacity: .7
+            }
+
+            90% {
+                opacity: .3
+            }
+
+            100% {
+                transform: translateY(-5vh);
+                opacity: 0
+            }
+        }
+
+        /* ── GLASS CARD ── */
+        .card {
+            position: relative;
+            z-index: 10;
+            width: 460px;
+            max-width: 95vw;
+            background: rgba(15, 30, 55, .75);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 24px;
+            padding: 44px 44px 36px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .08);
+            animation: card-in .6s var(--ease) both;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+
+        @keyframes card-in {
+            from {
+                opacity: 0;
+                transform: translateY(24px) scale(.97)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .card::-webkit-scrollbar {
+            width: 3px
+        }
+
+        .card::-webkit-scrollbar-thumb {
+            background: rgba(0, 200, 83, .3);
+            border-radius: 3px
+        }
+
+        /* top glow bar */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00C853, #1a6fd4, transparent);
+            border-radius: 2px;
+        }
+
+        /* ── LOGO + BRAND ── */
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+            cursor: pointer
+        }
+
+        .brand-logo {
+            flex-shrink: 0;
+            transition: filter .3s
+        }
+
+        .brand-logo:hover {
+            filter: drop-shadow(0 0 14px rgba(0, 200, 83, .8))
+        }
+
+        .brand-text .b-title {
+            font-size: 19px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -.3px
+        }
+
+        .brand-text .b-sub {
+            font-size: 10px;
+            color: var(--green);
+            font-weight: 700;
+            letter-spacing: .8px;
+            margin-top: 2px
+        }
+
+        .brand-text .b-org {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .35);
+            margin-top: 1px;
+            font-weight: 400
+        }
+
+        /* ── ROLE TOGGLE ── */
+        .role-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            background: rgba(0, 0, 0, .3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 28px;
+        }
+
+        .role-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, .45);
+            transition: all .25s var(--ease);
+            border: none;
+            background: transparent;
+            user-select: none;
+        }
+
+        .role-btn.active {
+            background: linear-gradient(135deg, rgba(0, 200, 83, .18), rgba(26, 111, 212, .15));
+            color: #fff;
+            border: 1px solid rgba(0, 200, 83, .35);
+            box-shadow: 0 4px 16px rgba(0, 200, 83, .2);
+        }
+
+        .role-btn .role-icon {
+            font-size: 16px
+        }
+
+        .role-admin.active {
+            background: linear-gradient(135deg, rgba(239, 68, 68, .18), rgba(239, 68, 68, .08));
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, .4)
+        }
+
+        /* ── FORM ── */
+        .form-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 4px;
+            letter-spacing: -.3px
+        }
+
+        .form-hint {
+            font-size: 12.5px;
+            color: rgba(255, 255, 255, .4);
+            margin-bottom: 24px
+        }
+
+        .form-group {
+            margin-bottom: 18px
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .55);
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            margin-bottom: 7px
+        }
+
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            font-size: 15px;
+            pointer-events: none;
+            z-index: 1;
+            opacity: .55
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 10px;
+            color: #f0f4ff;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all .2s var(--ease);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, .25)
+        }
+
+        .form-control:focus {
+            border-color: rgba(0, 200, 83, .6);
+            background: rgba(0, 200, 83, .06);
+            box-shadow: 0 0 0 3px rgba(0, 200, 83, .12)
+        }
+
+        .form-control.error {
+            border-color: var(--red);
+            background: rgba(239, 68, 68, .06)
+        }
+
+        .toggle-pw {
+            position: absolute;
+            right: 14px;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: .5;
+            transition: opacity .2s
+        }
+
+        .toggle-pw:hover {
+            opacity: 1
+        }
+
+        /* ── SUBMIT BTN ── */
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            transition: all .28s var(--ease);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-admin {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(220, 38, 38, .4)
+        }
+
+        .btn-admin:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(220, 38, 38, .55)
+        }
+
+        .btn-consumer {
+            background: linear-gradient(135deg, #00C853, #00b96b);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0, 200, 83, .4)
+        }
+
+        .btn-consumer:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 200, 83, .55)
+        }
+
+        .btn-login:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2.5px solid rgba(255, 255, 255, .3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        /* ── ALERT ── */
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 18px;
+            animation: slide-in .25s ease
+        }
+
+        @keyframes slide-in {
+            from {
+                opacity: 0;
+                transform: translateY(-8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, .12);
+            border: 1px solid rgba(239, 68, 68, .3);
+            color: #fca5a5
+        }
+
+        .hidden {
+            display: none !important
+        }
+
+        /* ── FORGOT / CREDS ── */
+        .forgot {
+            text-align: right;
+            margin-top: 10px
+        }
+
+        .forgot a {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .35);
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color .2s
+        }
+
+        .forgot a:hover {
+            color: var(--green)
+        }
+
+
+
+        /* ── FOOTER ── */
+        .card-footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255, 255, 255, .22);
+            line-height: 1.6
+        }
+
+        .card-footer a {
+            color: rgba(0, 200, 83, .5);
+            text-decoration: none
+        }
+
+        .card-footer a:hover {
+            color: var(--green)
+        }
+
+        /* ── REGISTER BUTTON ── */
+        .btn-register {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1.5px solid rgba(0, 200, 83, .45);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: all .28s var(--ease);
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(0, 200, 83, .08);
+            color: var(--green);
+            letter-spacing: .2px;
+        }
+
+        .btn-register:hover {
+            background: rgba(0, 200, 83, .18);
+            border-color: rgba(0, 200, 83, .7);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(0, 200, 83, .22);
+        }
+
+        /* ── REGISTRATION MODAL OVERLAY ── */
+        .reg-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(3, 11, 21, .88);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: fade-in .3s ease both;
+        }
+
+        .reg-overlay.hidden {
+            display: none !important;
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .reg-modal {
+            position: relative;
+            width: 560px;
+            max-width: 98vw;
+            max-height: 92vh;
+            overflow-y: auto;
+            background: rgba(10, 25, 48, .92);
+            backdrop-filter: blur(26px);
+            -webkit-backdrop-filter: blur(26px);
+            border: 1px solid rgba(0, 200, 83, .22);
+            border-radius: 22px;
+            padding: 40px 40px 32px;
+            box-shadow: 0 28px 90px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .07);
+            animation: modal-in .38s var(--ease) both;
+        }
+
+        .reg-modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 8%;
+            right: 8%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00C853, #1a6fd4, transparent);
+            border-radius: 2px;
+        }
+
+        @keyframes modal-in {
+            from {
+                opacity: 0;
+                transform: translateY(28px) scale(.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .reg-modal::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .reg-modal::-webkit-scrollbar-thumb {
+            background: rgba(0, 200, 83, .3);
+            border-radius: 3px;
+        }
+
+        .reg-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .reg-modal-title {
+            font-size: 21px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -.3px;
+        }
+
+        .reg-modal-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, .15);
+            background: rgba(255, 255, 255, .06);
+            color: rgba(255, 255, 255, .6);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+
+        .reg-modal-close:hover {
+            background: rgba(239, 68, 68, .18);
+            border-color: rgba(239, 68, 68, .5);
+            color: #fca5a5;
+        }
+
+        .reg-modal-hint {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .38);
+            margin-bottom: 24px;
+        }
+
+        .reg-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 18px;
+        }
+
+        .reg-grid .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        /* ── SUCCESS SCREEN ── */
+        .reg-success {
+            text-align: center;
+            padding: 16px 8px 8px;
+        }
+
+        .success-icon {
+            font-size: 54px;
+            margin-bottom: 16px;
+            animation: pop-in .5s var(--ease) both;
+        }
+
+        @keyframes pop-in {
+            from {
+                transform: scale(0.4);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--green);
+            margin-bottom: 6px;
+        }
+
+        .success-subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, .45);
+            margin-bottom: 24px;
+        }
+
+        .cred-card {
+            background: rgba(0, 200, 83, .07);
+            border: 1px solid rgba(0, 200, 83, .25);
+            border-radius: 14px;
+            padding: 20px 24px;
+            text-align: left;
+            margin-bottom: 24px;
+        }
+
+        .cred-card-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--green);
+            margin-bottom: 14px;
+        }
+
+        .cred-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 12px;
+        }
+
+        .cred-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .cred-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .45);
+            font-weight: 500;
+        }
+
+        .cred-value {
+            background: rgba(255, 255, 255, .07);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #7dd3a8;
+            font-family: monospace;
+            letter-spacing: .5px;
+        }
+
+        .btn-go-login {
+            width: 100%;
+            padding: 13px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #00C853, #00b96b);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0, 200, 83, .4);
+            transition: all .28s var(--ease);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-go-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 200, 83, .55);
+        }
+
+        /* ── VALIDATION ERROR TEXT ── */
+        .field-error {
+            font-size: 11px;
+            color: #fca5a5;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .field-error.show {
+            display: block;
+        }
+
+        /* ── REG ALERT ── */
+        .reg-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 11px 15px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            animation: slide-in .25s ease;
+            background: rgba(239, 68, 68, .12);
+            border: 1px solid rgba(239, 68, 68, .3);
+            color: #fca5a5;
+        }
+
+        /* ── DIVIDER ── */
+        .or-divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 14px 0 6px;
+            color: rgba(255, 255, 255, .2);
+            font-size: 11px;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, .1);
+        }
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+
+    <!-- Background -->
+    <div class="bg" id="bg"></div>
+
+    <!-- Glass Login Card -->
+    <div class="card" id="card">
+
+        <!-- Brand -->
+        <div class="brand" onclick="window.location.href='index.html'">
+            <img src="logo.png" width="52" height="52" alt="SolarTrack Pro Logo" class="brand-logo" />
+            <div class="brand-text">
+                <div class="b-title">SolarTrack Pro</div>
+                <div class="b-sub">TNPDCL Net Metering System</div>
+                <div class="b-org">Tamil Nadu Power Distribution Corporation Ltd.</div>
+            </div>
+        </div>
+
+        <!-- Role Toggle -->
+        <div class="role-toggle" id="role-toggle">
+            <button class="role-btn role-admin active" id="btn-admin" onclick="setRole('admin')" type="button">
+                <span class="role-icon">🛡</span> Administrator
+            </button>
+            <button class="role-btn role-consumer" id="btn-consumer" onclick="setRole('consumer')" type="button">
+                <span class="role-icon">👤</span> Consumer
+            </button>
+        </div>
+
+        <!-- Alert -->
+        <div class="alert alert-error hidden" id="alert">
+            <span>⚠</span><span id="alert-msg">Invalid credentials.</span>
+        </div>
+
+        <!-- Form Title (dynamic) -->
+        <div class="form-title" id="form-title">🛡 Admin Login</div>
+        <div class="form-hint" id="form-hint">Sign in to access the Administrator Control Center</div>
+
+        <!-- Form -->
+        <form id="login-form" autocomplete="off" novalidate>
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <div class="input-wrap">
+                    <span class="input-icon">👤</span>
+                    <input type="text" id="username" class="form-control" placeholder="Enter your username"
+                        autocomplete="username" required />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🔑</span>
+                    <input type="password" id="password" class="form-control" placeholder="Enter your password"
+                        autocomplete="current-password" required />
+                    <span class="toggle-pw" id="toggle-pw">👁</span>
+                </div>
+            </div>
+            <button type="submit" class="btn-login btn-admin" id="login-btn">
+                <span id="btn-label">Sign In as Admin →</span>
+                <div class="spinner hidden" id="spinner"></div>
+            </button>
+            <div class="forgot"><a onclick="openForgotModal()">Forgot
+                    password?</a></div>
+
+            <!-- New Consumer Registration Button (only visible in Consumer mode) -->
+            <div id="reg-btn-wrap" class="hidden">
+                <div class="or-divider">or</div>
+                <button type="button" class="btn-register" id="btn-open-reg" onclick="openRegModal()">
+                    ✨ New Consumer Registration
+                </button>
+            </div>
+        </form>
+
+
+
+        <!-- Footer -->
+        <div class="card-footer">
+            Tamil Nadu Power Distribution Corporation Ltd. — Solar Division<br />
+            © 2026 SolarTrack Pro · <a href="index.html">Home</a> · v2.2.0
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         CONSUMER REGISTRATION MODAL
+    ══════════════════════════════════════════ -->
+    <div class="reg-overlay hidden" id="reg-overlay">
+        <div class="reg-modal" id="reg-modal">
+
+            <!-- REGISTRATION FORM VIEW -->
+            <div id="reg-form-view">
+                <div class="reg-modal-header">
+                    <div class="reg-modal-title">☀ New Consumer Registration</div>
+                    <button class="reg-modal-close" onclick="closeRegModal()" title="Close">✕</button>
+                </div>
+                <div class="reg-modal-hint">Fill in your details to create a SolarTrack Pro consumer account.</div>
+
+                <div class="reg-alert hidden" id="reg-alert">
+                    <span>⚠</span><span id="reg-alert-msg">Please fix the errors below.</span>
+                </div>
+
+                <form id="reg-form" autocomplete="off" novalidate>
+                    <div class="reg-grid">
+
+                        <!-- Full Name -->
+                        <div class="form-group">
+                            <label class="form-label" for="reg-name">Full Name</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">👤</span>
+                                <input type="text" id="reg-name" class="form-control" placeholder="e.g. Akaash Kumar"
+                                    maxlength="80" />
+                            </div>
+                            <div class="field-error" id="err-name">Full name is required.</div>
+                        </div>
+
+                        <!-- Consumer ID -->
+                        <div class="form-group">
+                            <label class="form-label" for="reg-consumer-id">Consumer ID</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">🆔</span>
+                                <input type="text" id="reg-consumer-id" class="form-control"
+                                    placeholder="e.g. TN2225041843" maxlength="20" />
+                            </div>
+                            <div class="field-error" id="err-consumer-id">Consumer ID is required.</div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="form-group">
+                            <label class="form-label" for="reg-email">Email Address</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">📧</span>
+                                <input type="email" id="reg-email" class="form-control" placeholder="vikkyakaash@gmail.com"
+                                    maxlength="100" />
+                            </div>
+                            <div class="field-error" id="err-email">Enter a valid email address.</div>
+                        </div>
+
+                        <!-- Mobile -->
+                        <div class="form-group">
+                            <label class="form-label" for="reg-mobile">Mobile Number</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">📱</span>
+                                <input type="tel" id="reg-mobile" class="form-control" placeholder="10-digit number"
+                                    maxlength="10" />
+                            </div>
+                            <div class="field-error" id="err-mobile">Enter a valid 10-digit mobile number.</div>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="form-group full">
+                            <label class="form-label" for="reg-address">Address</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">🏠</span>
+                                <input type="text" id="reg-address" class="form-control"
+                                    placeholder="Street, City, Pincode" maxlength="200" />
+                            </div>
+                            <div class="field-error" id="err-address">Address is required.</div>
+                        </div>
+
+                        <!-- Solar Capacity -->
+                        <div class="form-group">
+                            <label class="form-label" for="reg-capacity">Solar System Capacity (kW)</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">⚡</span>
+                                <input type="number" id="reg-capacity" class="form-control" placeholder="e.g. 5"
+                                    min="0.1" max="999" step="0.1" />
+                            </div>
+                            <div class="field-error" id="err-capacity">Enter a valid capacity in kW.</div>
+                        </div>
+
+                        <!-- EB Service Number -->
+                        <div class="form-group">
+                            <label class="form-label" for="reg-eb">EB Service Number</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">🔌</span>
+                                <input type="text" id="reg-eb" class="form-control" placeholder="e.g. EB-TN-004312"
+                                    maxlength="30" />
+                            </div>
+                            <div class="field-error" id="err-eb">EB Service Number is required.</div>
+                        </div>
+
+                        <!-- Location / Area -->
+                        <div class="form-group full">
+                            <label class="form-label" for="reg-location">Location / Area</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">📍</span>
+                                <input type="text" id="reg-location" class="form-control"
+                                    placeholder="e.g. T. Nagar, Chennai" maxlength="100" />
+                            </div>
+                            <div class="field-error" id="err-location">Location / Area is required.</div>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="form-group">
+                            <label class="form-label" for="reg-password">Create Password</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">🔑</span>
+                                <input type="password" id="reg-password" class="form-control"
+                                    placeholder="Min. 6 characters" maxlength="50" />
+                                <span class="toggle-pw" id="reg-toggle-pw1"
+                                    onclick="toggleRegPw('reg-password','reg-toggle-pw1')">👁</span>
+                            </div>
+                            <div class="field-error" id="err-password">Password must be at least 6 characters.</div>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="form-group">
+                            <label class="form-label" for="reg-confirm-password">Confirm Password</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">🔐</span>
+                                <input type="password" id="reg-confirm-password" class="form-control"
+                                    placeholder="Re-enter password" maxlength="50" />
+                                <span class="toggle-pw" id="reg-toggle-pw2"
+                                    onclick="toggleRegPw('reg-confirm-password','reg-toggle-pw2')">👁</span>
+                            </div>
+                            <div class="field-error" id="err-confirm-password">Passwords do not match.</div>
+                        </div>
+
+                    </div><!-- /reg-grid -->
+
+                    <button type="submit" class="btn-login btn-consumer" id="reg-submit-btn" style="margin-top:8px;">
+                        <span id="reg-submit-label">Create Account →</span>
+                        <div class="spinner hidden" id="reg-spinner"></div>
+                    </button>
+                </form>
+            </div><!-- /reg-form-view -->
+
+            <!-- SUCCESS VIEW -->
+            <div id="reg-success-view" class="hidden reg-success">
+                <div class="success-icon">🎉</div>
+                <div class="success-title">Registration Successful!</div>
+                <div class="success-subtitle">Your SolarTrack Pro consumer account has been created.<br>Save your login
+                    credentials below.</div>
+
+                <div class="cred-card">
+                    <div class="cred-card-title">🔐 Your Login Credentials</div>
+                    <div class="cred-row">
+                        <span class="cred-label">Username</span>
+                        <span class="cred-value" id="success-username">—</span>
+                    </div>
+                    <div class="cred-row">
+                        <span class="cred-label">Password</span>
+                        <span class="cred-value" id="success-password">—</span>
+                    </div>
+                    <div class="cred-row">
+                        <span class="cred-label">Registered Name</span>
+                        <span class="cred-value" id="success-name"
+                            style="font-family:'Inter',sans-serif;font-size:13px;">—</span>
+                    </div>
+                </div>
+
+                <button class="btn-go-login" onclick="goToLogin()">
+                    🔑 Go to Login Page
+                </button>
+            </div><!-- /reg-success-view -->
+        </div><!-- /reg-modal -->
+    </div><!-- /reg-overlay -->
+
+    <!-- ══════════════════════════════════════════
+         FORGOT PASSWORD MODAL
+    ══════════════════════════════════════════ -->
+    <div class="reg-overlay hidden" id="forgot-overlay">
+        <div class="reg-modal" style="width: 400px; padding: 32px;">
+            <div class="reg-modal-header">
+                <div class="reg-modal-title">🔑 Reset Password</div>
+                <button class="reg-modal-close" onclick="closeForgotModal()">✕</button>
+            </div>
+            <div class="reg-modal-hint" style="margin-bottom: 20px;">Enter your registered email address to receive a password reset link.</div>
+            
+            <div id="forgot-alert" class="alert hidden" style="margin-bottom: 16px;">
+                <span id="forgot-alert-msg"></span>
+            </div>
+
+            <form id="forgot-form" onsubmit="handleForgotSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">📧</span>
+                        <input type="email" id="forgot-email" class="form-control" placeholder="admin@solartrack-pro.com" required />
+                    </div>
+                </div>
+                <button type="submit" class="btn-login btn-consumer" id="forgot-btn">
+                    <span id="forgot-btn-label">Send Reset Link →</span>
+                    <div class="spinner hidden" id="forgot-spinner"></div>
+                </button>
+            </form>
+            
+            <div id="forgot-success" class="hidden" style="text-align: center; padding: 10px 0;">
+                <div style="font-size: 40px; margin-bottom: 12px;">📧</div>
+                <div style="color: var(--green); font-weight: 700; margin-bottom: 8px;">Reset Link Sent!</div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 20px; text-align: left; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <p style="margin-bottom: 8px;">If you don't see the email within 2 minutes:</p>
+                    <ul style="margin-left: 16px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px;">
+                        <li>Check your <b>Spam / Junk</b> folder.</li>
+                        <li>Ensure the email is <b>registered</b> in your Firebase Auth Console.</li>
+                        <li>Verify that <b>Email/Password</b> is enabled in Firebase Authentication.</li>
+                        <li>If running via <code>file://</code>, try using a <b>Local Server</b>.</li>
+                    </ul>
+                </div>
+                <button class="btn-register" onclick="openForgotModal()" style="background: rgba(255,255,255,0.05); color: #fff; border-color: rgba(255,255,255,0.2); font-size: 11px; padding: 8px;">
+                    🔄 Didn't get it? Try again
+                </button>
+
+                <button class="btn-register" onclick="closeForgotModal()" style="margin-top: 10px;">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ── Global Debug ── */
+        window.addEventListener('error', function(e) {
+            console.error("[Fatal Error]", e.message, "at", e.filename, ":", e.lineno);
+        });
+
+        /* ── Particles ── */
+        (function () {
+            const bg = document.getElementById('bg');
+            for (let i = 0; i < 22; i++) {
+                const p = document.createElement('div'); p.className = 'particle';
+                p.style.cssText = `left:${Math.random() * 100}%;width:${Math.random() * 3 + 1}px;height:${Math.random() * 3 + 1}px;
+    animation-duration:${Math.random() * 12 + 7}s;animation-delay:${Math.random() * 8}s;
+    background:${Math.random() > .6 ? '#00C853' : Math.random() > .5 ? '#FFC107' : '#5ba8f5'};opacity:.5;`;
+                bg.appendChild(p);
+            }
+        })();
+
+        /* ── Redirect if already logged in ── */
+        (function () {
+            const s = getSession();
+            if (s) {
+                window.location.replace(s.role === 'admin' ? 'admin-home.html' : 'dashboard.html');
+            }
+        })();
+
+        /* ── Role toggle ── */
+        let currentRole = 'admin';
+        function setRole(role) {
+            currentRole = role;
+            document.getElementById('btn-admin').classList.toggle('active', role === 'admin');
+            document.getElementById('btn-consumer').classList.toggle('active', role === 'consumer');
+            document.getElementById('btn-admin').classList.toggle('role-consumer', false);
+            if (role === 'admin') {
+                document.getElementById('form-title').textContent = '🛡 Admin Login';
+                document.getElementById('form-hint').textContent = 'Sign in to access the Administrator Control Center';
+                document.getElementById('login-btn').className = 'btn-login btn-admin';
+                document.getElementById('btn-label').textContent = 'Sign In as Admin →';
+                document.getElementById('reg-btn-wrap').classList.add('hidden');
+            } else {
+                document.getElementById('form-title').textContent = '☀ Consumer Login';
+                document.getElementById('form-hint').textContent = 'Sign in to view your personal solar monitoring dashboard';
+                document.getElementById('login-btn').className = 'btn-login btn-consumer';
+                document.getElementById('btn-label').textContent = 'Sign In as Consumer →';
+                document.getElementById('reg-btn-wrap').classList.remove('hidden');
+            }
+            document.getElementById('alert').classList.add('hidden');
+            document.getElementById('username').classList.remove('error');
+            document.getElementById('password').classList.remove('error');
+        }
+
+        /* ════════════════════════════════════════
+           REGISTRATION MODAL LOGIC
+        ════════════════════════════════════════ */
+
+        function openRegModal() {
+            document.getElementById('reg-overlay').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            // Reset to form view
+            document.getElementById('reg-form-view').classList.remove('hidden');
+            document.getElementById('reg-success-view').classList.add('hidden');
+            document.getElementById('reg-alert').classList.add('hidden');
+            document.getElementById('reg-form').reset();
+            clearRegErrors();
+        }
+
+        function closeRegModal() {
+            document.getElementById('reg-overlay').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Close modal if clicking outside
+        document.getElementById('reg-overlay').addEventListener('click', function (e) {
+            if (e.target === this) closeRegModal();
+        });
+
+        function toggleRegPw(inputId, iconId) {
+            const inp = document.getElementById(inputId);
+            const ico = document.getElementById(iconId);
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+            ico.textContent = inp.type === 'password' ? '👁' : '🙈';
+        }
+
+        function clearRegErrors() {
+            const errorIds = ['err-name', 'err-consumer-id', 'err-email', 'err-mobile',
+                'err-address', 'err-capacity', 'err-eb', 'err-location', 'err-password', 'err-confirm-password'];
+            const fieldIds = ['reg-name', 'reg-consumer-id', 'reg-email', 'reg-mobile',
+                'reg-address', 'reg-capacity', 'reg-eb', 'reg-location', 'reg-password', 'reg-confirm-password'];
+            errorIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('show');
+            });
+            fieldIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('error');
+            });
+        }
+
+        function showFieldError(errId, fieldId) {
+            const errEl = document.getElementById(errId);
+            const fieldEl = document.getElementById(fieldId);
+            if (errEl) errEl.classList.add('show');
+            if (fieldEl) fieldEl.classList.add('error');
+        }
+
+        /* Generate next username: consumer101, consumer102, etc. */
+        function generateUsername() {
+            console.log("[Registration] Accessing localStorage for registered consumers...");
+            const raw = localStorage.getItem('solar_registered_consumers');
+            console.log("[Registration] localStorage raw data retrieved (length):", raw ? raw.length : 0);
+            const registered = JSON.parse(raw || '[]');
+            console.log("[Registration] Parsed consumer list (count):", registered.length);
+            return 'consumer' + (101 + registered.length);
+        }
+
+        /* Registration form submit */
+        document.getElementById('reg-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            console.log("[Registration] Form submitted.");
+            clearRegErrors();
+            document.getElementById('reg-alert').classList.add('hidden');
+
+            // Grab values
+            const name = document.getElementById('reg-name').value.trim();
+            const consumerId = document.getElementById('reg-consumer-id').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const mobile = document.getElementById('reg-mobile').value.trim();
+            const address = document.getElementById('reg-address').value.trim();
+            const capacity = document.getElementById('reg-capacity').value.trim();
+            const eb = document.getElementById('reg-eb').value.trim();
+            const location = document.getElementById('reg-location').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const confirmPw = document.getElementById('reg-confirm-password').value;
+
+            // Validation
+            let valid = true;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const mobileRegex = /^[0-9]{10}$/;
+
+            if (!name) { showFieldError('err-name', 'reg-name'); valid = false; }
+            if (!consumerId) { showFieldError('err-consumer-id', 'reg-consumer-id'); valid = false; }
+            if (!email || !emailRegex.test(email)) { showFieldError('err-email', 'reg-email'); valid = false; }
+            if (!mobile || !mobileRegex.test(mobile)) { showFieldError('err-mobile', 'reg-mobile'); valid = false; }
+            if (!address) { showFieldError('err-address', 'reg-address'); valid = false; }
+            if (!capacity || isNaN(parseFloat(capacity)) || parseFloat(capacity) <= 0) { showFieldError('err-capacity', 'reg-capacity'); valid = false; }
+            if (!eb) { showFieldError('err-eb', 'reg-eb'); valid = false; }
+            if (!location) { showFieldError('err-location', 'reg-location'); valid = false; }
+            if (!password || password.length < 6) { showFieldError('err-password', 'reg-password'); valid = false; }
+            if (!confirmPw || confirmPw !== password) { showFieldError('err-confirm-password', 'reg-confirm-password'); valid = false; }
+
+            if (!valid) {
+                const alertEl = document.getElementById('reg-alert');
+                document.getElementById('reg-alert-msg').textContent = 'Please fix the highlighted fields and try again.';
+                alertEl.classList.remove('hidden');
+                // Scroll to top of modal
+                document.getElementById('reg-modal').scrollTop = 0;
+                return;
+            }
+
+            // Show spinner
+            const submitBtn = document.getElementById('reg-submit-btn');
+            const submitLabel = document.getElementById('reg-submit-label');
+            const regSpinner = document.getElementById('reg-spinner');
+            submitBtn.disabled = true;
+            submitLabel.textContent = 'Creating Account…';
+            regSpinner.classList.remove('hidden');
+
+            // Simulate brief delay
+            setTimeout(async () => {
+                console.log("[Registration] Processing account creation...");
+                try {
+                // Generate username
+                const username = generateUsername();
+                console.log("[Registration] Username generated:", username);
+
+                // Build consumer record
+                let consumerRecord = {
+                    username,
+                    role: 'consumer',
+                    name,
+                    consumerId,
+                    email,
+                    mobile,
+                    address,
+                    capacity: capacity + ' kW',
+                    serviceNumber: consumerId,
+                    ebServiceNumber: eb,
+                    location,
+                    section: location,
+                    meterSerial: 'MET-' + eb.replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase(),
+                    tariff: 5.00,
+                    registeredAt: new Date().toISOString()
+                };
+                console.log("[Registration] Consumer record prepared:", consumerRecord);
+
+                // Firebase branch
+                if (typeof FIREBASE_ENABLED !== 'undefined' && FIREBASE_ENABLED && firebaseAuth && (firebaseRTDB || firebaseDB)) {
+                    console.log("[Registration] Attempting Firebase Auth registration for:", email);
+                    
+                    // Helper to prevent infinite hang
+                    const withTimeout = (promise, ms) => Promise.race([
+                        promise,
+                        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout: Firebase is taking too long. Check your connection.")), ms))
+                    ]);
+
+                    const cred = await withTimeout(firebaseAuth.createUserWithEmailAndPassword(email, password), 15000);
+                    console.log("[Registration] Firebase Auth success. UID:", cred.user.uid);
+                    
+                    // NEW: Send Verification Email immediately
+                    try {
+                        await cred.user.sendEmailVerification();
+                        console.log("[Registration] Verification email sent to:", email);
+                    } catch(vErr) { console.warn("[Registration] Could not send verification email:", vErr); }
+                    
+                    // Save User Record
+                    try {
+                        console.log("[Registration] Saving user data to Database...");
+                        if (firebaseRTDB) {
+                            // Using REALTIME DATABASE (syntax: ref().set())
+                            await withTimeout(firebaseRTDB.ref('users/' + cred.user.uid).set(consumerRecord), 8000);
+                        } else {
+                            // Link back to Firestore if RTDB missing (syntax: collection().doc().set())
+                            await withTimeout(firebaseDB.collection('users').doc(cred.user.uid).set(consumerRecord), 8000);
+                        }
+                        console.log("[Registration] Database data saved successfully.");
+                    } catch (dbErr) {
+                        console.warn("[Registration] Auth worked but Database save failed:", dbErr);
+                        throw new Error("Auth Success, but could not save profile to Database. Please check your Firebase Database rules.");
+                    }
+                } else {
+                    // Fallback to localStorage
+                    console.log("[Registration] Using LocalStorage mode.");
+                    consumerRecord.password = password; // only persist password in local mode
+                    let registered = [];
+                    try {
+                        const raw = localStorage.getItem('solar_registered_consumers');
+                        registered = JSON.parse(raw || '[]');
+                        console.log("[Registration] Current local count:", registered.length);
+                    } catch(e) {
+                        console.error("[Registration] LocalStorage Read Error:", e);
+                    }
+                    registered.push(consumerRecord);
+                    localStorage.setItem('solar_registered_consumers', JSON.stringify(registered));
+                    console.log("[Registration] LocalStorage Save Success.");
+                }
+
+                // Show success
+                submitBtn.disabled = false;
+                submitLabel.textContent = 'Create Account →';
+                regSpinner.classList.add('hidden');
+
+                document.getElementById('success-username').textContent = username;
+                document.getElementById('success-password').textContent = password;
+                document.getElementById('success-name').textContent = name;
+
+                document.getElementById('reg-form-view').classList.add('hidden');
+                document.getElementById('reg-success-view').classList.remove('hidden');
+                document.getElementById('reg-modal').scrollTop = 0;
+                } catch(e) {
+                    console.error("[Registration] Critical Error:", e);
+                    submitBtn.disabled = false;
+                    submitLabel.textContent = 'Create Account →';
+                    regSpinner.classList.add('hidden');
+                    
+                    const alertEl = document.getElementById('reg-alert');
+                    const msgEl = document.getElementById('reg-alert-msg');
+                    
+                    let errorHtml = `<span>⚠</span> <b>Error:</b> ${e.message || 'Registration failed.'}`;
+                    
+                    // If it was a timeout or network error, offer Local Storage fallback
+                    if (e.message.includes("Timeout") || !navigator.onLine) {
+                        errorHtml += `<br><div style="margin-top:10px; font-size:11px; opacity:0.9;">Firebase is unreachable. Check your internet or:</div>
+                                      <button type="button" onclick="saveToLocalFallback()" 
+                                      style="margin-top:8px; padding:6px 12px; border:1px solid #fff; background:transparent; color:#fff; cursor:pointer; font-size:11px; border-radius:4px;">
+                                      💾 Save to Local Database (Demo Mode) Instead
+                                      </button>`;
+                    }
+                    
+                    alertEl.innerHTML = errorHtml;
+                    alertEl.classList.remove('hidden');
+                    document.getElementById('reg-modal').scrollTop = 0;
+                    
+                    // Attach global function for fallback
+                    window.saveToLocalFallback = async () => {
+                         try {
+                            console.log("[Registration] Manual Fallback: Saving to LocalStorage.");
+                            alertEl.classList.add('hidden');
+                            submitBtn.disabled = true;
+                            submitLabel.textContent = 'Saving Locally...';
+                            regSpinner.classList.remove('hidden');
+
+                            consumerRecord.password = password; 
+                            let registered = JSON.parse(localStorage.getItem('solar_registered_consumers') || '[]');
+                            registered.push(consumerRecord);
+                            localStorage.setItem('solar_registered_consumers', JSON.stringify(registered));
+                            
+                            // Success UI
+                            submitBtn.disabled = false;
+                            submitLabel.textContent = 'Create Account →';
+                            regSpinner.classList.add('hidden');
+                            document.getElementById('success-username').textContent = username;
+                            document.getElementById('success-password').textContent = password;
+                            document.getElementById('success-name').textContent = name;
+                            document.getElementById('reg-form-view').classList.add('hidden');
+                            document.getElementById('reg-success-view').classList.remove('hidden');
+                         } catch(err) {
+                             alert("Local save failed: " + err.message);
+                         }
+                    };
+                }
+            }, 900);
+        });
+
+        function goToLogin() {
+            closeRegModal();
+            setRole('consumer');
+            // Pre-fill username in login field
+            const uname = document.getElementById('success-username').textContent;
+            if (uname && uname !== '—') {
+                document.getElementById('username').value = uname;
+                document.getElementById('password').focus();
+            }
+        }
+
+        /* ── Password toggle ── */
+        document.getElementById('toggle-pw').addEventListener('click', () => {
+            const pw = document.getElementById('password');
+            const ico = document.getElementById('toggle-pw');
+            pw.type = pw.type === 'password' ? 'text' : 'password';
+            ico.textContent = pw.type === 'password' ? '👁' : '🙈';
+        });
+
+        /* ── Form submit ── */
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const alertEl = document.getElementById('alert');
+            const spinner = document.getElementById('spinner');
+            const btn = document.getElementById('login-btn');
+            const lbl = document.getElementById('btn-label');
+
+            alertEl.classList.add('hidden');
+            document.getElementById('username').classList.remove('error');
+            document.getElementById('password').classList.remove('error');
+
+            if (!username || !password) {
+                document.getElementById('alert-msg').textContent = 'Please enter both username and password.';
+                alertEl.classList.remove('hidden');
+                if (!username) document.getElementById('username').classList.add('error');
+                if (!password) document.getElementById('password').classList.add('error');
+                return;
+            }
+
+            lbl.textContent = 'Signing in…';
+            spinner.classList.remove('hidden');
+            btn.disabled = true;
+
+            try {
+                const session = await authLogin(username, password);
+                // Check role matches selection
+                if (session.role !== currentRole) {
+                    clearSession();
+                    throw `This account is a ${session.role} account. Please select the correct role.`;
+                }
+                lbl.textContent = '✓ Success!';
+                spinner.classList.add('hidden');
+                document.getElementById('card').style.opacity = '0';
+                document.getElementById('card').style.transform = 'scale(.97)';
+                document.getElementById('card').style.transition = 'all .35s ease';
+                setTimeout(() => {
+                    window.location.replace(session.role === 'admin' ? 'admin-home.html' : 'dashboard.html');
+                }, 380);
+            } catch (err) {
+                spinner.classList.add('hidden');
+                lbl.textContent = currentRole === 'admin' ? 'Sign In as Admin →' : 'Sign In as Consumer →';
+                btn.disabled = false;
+                document.getElementById('alert-msg').textContent = typeof err === 'string' ? err : 'Login failed. Please try again.';
+                alertEl.classList.remove('hidden');
+                document.getElementById('username').classList.add('error');
+                document.getElementById('password').classList.add('error');
+            }
+        });
+        /* ════════════════════════════════════════
+           FORGOT PASSWORD LOGIC
+        ════════════════════════════════════════ */
+        function openForgotModal() {
+            document.getElementById('forgot-overlay').classList.remove('hidden');
+            document.getElementById('forgot-form').classList.remove('hidden');
+            document.getElementById('forgot-success').classList.add('hidden');
+            document.getElementById('forgot-alert').classList.add('hidden');
+            document.getElementById('forgot-email').value = '';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeForgotModal() {
+            document.getElementById('forgot-overlay').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Close modal if clicking outside
+        document.getElementById('forgot-overlay').addEventListener('click', function (e) {
+            if (e.target === this) closeForgotModal();
+        });
+
+        async function handleForgotSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value.trim();
+            const btn = document.getElementById('forgot-btn');
+            const lbl = document.getElementById('forgot-btn-label');
+            const spinner = document.getElementById('forgot-spinner');
+            const alert = document.getElementById('forgot-alert');
+            const alertMsg = document.getElementById('forgot-alert-msg');
+            
+            if (!email) return;
+
+            // UI Loading state
+            btn.disabled = true;
+            lbl.classList.add('hidden');
+            spinner.classList.remove('hidden');
+            alert.classList.add('hidden');
+
+            try {
+                console.log("[Forgot Password] Requesting reset for:", email);
+                
+                if (typeof FIREBASE_ENABLED !== 'undefined' && FIREBASE_ENABLED && firebaseAuth) {
+                        // Detect if running on file:// protocol (Firebase Auth won't work well here)
+                        if (window.location.protocol === 'file:') {
+                            console.warn("[Auth] Firebase Reset Email may fail on file:// protocol. Please use a local server.");
+                        }
+
+                        // Robustly build the absolute URL for the custom reset handler
+                        const resetUrl = new URL('reset-password.html', window.location.origin + window.location.pathname).href;
+                        
+                        const actionCodeSettings = {
+                             url: resetUrl,
+                             handleCodeInApp: true
+                        };
+                        console.info("[Auth] Reset link will point to:", resetUrl);
+                    
+                    try {
+                        await firebaseAuth.sendPasswordResetEmail(email, actionCodeSettings);
+                        console.info("[Forgot Password] Firebase accepted the request! Checking inbox...");
+                    } catch (fbErr) {
+                        // 🔍 DEBUG ALERT: Tell the user exactly why Firebase might be silent
+                        if (fbErr.code === "auth/user-not-found") {
+                            console.warn("[Forgot Password] Email not found in Firebase database.");
+                             const demoLink = window.location.href.replace('login.html', `reset-password.html?oobCode=demo&email=${encodeURIComponent(email)}`);
+                             window.alert(`User Not Found in Firebase.\nIf this is a local/demo user, please use the manual link below (printed in console) or visit:\nreset-password.html?oobCode=demo&email=${encodeURIComponent(email)}`);
+                             console.log("[Demo Bypass] Reset Link: " + demoLink);
+                             throw fbErr;
+                        } else if (fbErr.code === "auth/invalid-email") {
+                            window.alert("Diagnostic Info: The email format is invalid.");
+                        } else if (fbErr.code === "auth/unauthorized-domain") {
+                            const demoLink = window.location.href.replace('login.html', `reset-password.html?oobCode=demo&email=${encodeURIComponent(email)}`);
+                            window.alert(`AUTH DOMAIN ERROR: Current domain is NOT whitelisted in Firebase. \n\nMANUAL DEMO BYPASS: Check console for a direct link or visit:\nreset-password.html?oobCode=demo&email=${encodeURIComponent(email)}`);
+                            console.log("[Demo Bypass] Reset Link: " + demoLink);
+                            throw fbErr; 
+                        } else {
+                            throw fbErr;
+                        }
+                    }
+                } else {
+                    console.warn("[Forgot Password] Demo Mode: Running without Firebase Auth.");
+                }
+
+                // SUCCESS UI — ALWAYS SHOW for "Run for all" behavior
+                document.getElementById('forgot-form').classList.add('hidden');
+                document.getElementById('forgot-success').classList.remove('hidden');
+
+            } catch (err) {
+                console.error("[Forgot Password] Critical Error:", err);
+                alert.className = "alert alert-error";
+                let errMsg = typeof err === 'string' ? err : (err.message || "Failed to send reset link.");
+                
+                if (err.code === "auth/unauthorized-domain") {
+                    errMsg = "Domain Unauthorized: Please add your current domain to Firebase Console.";
+                } else if (err.code === "auth/invalid-continue-uri") {
+                    errMsg = "Invalid Reset Link: The redirect URL is not authorized.";
+                }
+                
+                alertMsg.textContent = errMsg;
+                alert.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                lbl.classList.remove('hidden');
+                spinner.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+
+</html>

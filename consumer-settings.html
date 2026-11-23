@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Settings — SolarTrack Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="consumer-sidebar.css" />
+    <style>
+        :root {
+            --sb-w: 64px;
+            --sb-expanded: 260px;
+            --green: #00C853;
+            --green2: #00b96b;
+            --navy: #0B1F3A;
+            --gold: #FFC107;
+            --red: #ef4444;
+            --border: rgba(255, 255, 255, .08);
+            --ease: cubic-bezier(.4, 0, .2, 1);
+        }
+
+        body {
+            animation: fade-in .4s ease
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        /* ── SIDEBAR & TOPBAR styles now shared via consumer-sidebar.css ── */
+
+
+        .topbar-left,
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 14px
+        }
+
+        .topbar-left {
+            gap: 14px
+        }
+
+        .pg-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #fff
+        }
+
+        .pg-bc {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .3);
+            margin-top: 1px
+        }
+
+        .hbg {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4.5px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .08);
+            cursor: pointer;
+            transition: all .2s;
+            flex-shrink: 0
+        }
+
+        .hbg:hover {
+            background: rgba(0, 200, 83, .14);
+            border-color: rgba(0, 200, 83, .3)
+        }
+
+        .hbg span {
+            display: block;
+            width: 16px;
+            height: 2px;
+            background: rgba(255, 255, 255, .55);
+            border-radius: 2px;
+            transition: all .28s
+        }
+
+        .hbg.open span:nth-child(1) {
+            transform: translateY(6.5px) rotate(45deg);
+            background: var(--green)
+        }
+
+        .hbg.open span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0)
+        }
+
+        .hbg.open span:nth-child(3) {
+            transform: translateY(-6.5px) rotate(-45deg);
+            background: var(--green)
+        }
+
+        .tb-logout {
+            padding: 7px 16px;
+            border-radius: 8px;
+            background: rgba(239, 68, 68, .12);
+            border: 1px solid rgba(239, 68, 68, .25);
+            color: #fca5a5;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        .tb-logout:hover {
+            background: rgba(239, 68, 68, .22)
+        }
+
+        .back-btn {
+            padding: 7px 16px;
+            border-radius: 8px;
+            background: rgba(0, 200, 83, .1);
+            border: 1px solid rgba(0, 200, 83, .25);
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 200, 83, .2)
+        }
+
+        /* ── PAGE ── */
+        .page-body {
+            padding: 28px;
+            flex: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%
+        }
+
+        .section-hd {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            margin-bottom: 18px
+        }
+
+        .section-hd::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, .07)
+        }
+
+        .card {
+            background: rgba(15, 30, 55, .85);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 26px;
+            margin-bottom: 22px
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 9px
+        }
+
+        /* ── SETTING ROWS ── */
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+            gap: 16px
+        }
+
+        .setting-row:last-child {
+            border-bottom: none
+        }
+
+        .sr-left {
+            flex: 1
+        }
+
+        .sr-title {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #f0f4ff;
+            margin-bottom: 3px
+        }
+
+        .sr-desc {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, .35)
+        }
+
+        /* Toggle switch */
+        .toggle {
+            position: relative;
+            width: 46px;
+            height: 26px;
+            flex-shrink: 0
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: rgba(255, 255, 255, .1);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 26px;
+            transition: .3s
+        }
+
+        .slider::before {
+            content: '';
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: rgba(255, 255, 255, .5);
+            border-radius: 50%;
+            transition: .3s
+        }
+
+        input:checked+.slider {
+            background: linear-gradient(135deg, #00C853, #00b96b);
+            border-color: rgba(0, 200, 83, .5)
+        }
+
+        input:checked+.slider::before {
+            transform: translateX(20px);
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 200, 83, .4)
+        }
+
+        /* Select / input */
+        .sr-select {
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 8px;
+            color: #f0f4ff;
+            font-size: 12.5px;
+            font-family: 'Inter', sans-serif;
+            padding: 8px 12px;
+            outline: none;
+            transition: border-color .2s;
+            flex-shrink: 0;
+            min-width: 140px
+        }
+
+        .sr-select:focus {
+            border-color: rgba(0, 200, 83, .5);
+            background: rgba(0, 200, 83, .05)
+        }
+
+        .sr-select option {
+            background: #0a1a2e
+        }
+
+        /* Password form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px
+        }
+
+        @media(max-width:600px) {
+            .form-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .fg {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .fg.full {
+            grid-column: 1/-1
+        }
+
+        .fg label {
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .4)
+        }
+
+        .fg input {
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 9px;
+            color: #f0f4ff;
+            font-size: 13.5px;
+            font-family: 'Inter', sans-serif;
+            padding: 11px 14px;
+            transition: all .2s;
+            outline: none
+        }
+
+        .fg input:focus {
+            border-color: rgba(0, 200, 83, .55);
+            background: rgba(0, 200, 83, .05);
+            box-shadow: 0 0 0 3px rgba(0, 200, 83, .1)
+        }
+
+        .fg input.error {
+            border-color: var(--red) !important
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 22px
+        }
+
+        .btn-primary {
+            padding: 11px 28px;
+            border-radius: 9px;
+            border: none;
+            background: linear-gradient(135deg, #00C853, #00b96b);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all .25s;
+            box-shadow: 0 3px 16px rgba(0, 200, 83, .35)
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 200, 83, .5)
+        }
+
+        .btn-danger {
+            padding: 11px 28px;
+            border-radius: 9px;
+            border: none;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all .25s;
+            box-shadow: 0 3px 16px rgba(239, 68, 68, .3)
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(239, 68, 68, .45)
+        }
+
+        .btn-secondary {
+            padding: 11px 28px;
+            border-radius: 9px;
+            border: 1px solid rgba(255, 255, 255, .15);
+            background: transparent;
+            color: rgba(255, 255, 255, .6);
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, .07)
+        }
+
+        /* Privacy item */
+        .priv-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .05)
+        }
+
+        .priv-item:last-child {
+            border-bottom: none
+        }
+
+        .priv-lbl {
+            font-size: 13px;
+            color: rgba(255, 255, 255, .65)
+        }
+
+        .priv-status {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px
+        }
+
+        .priv-enabled {
+            background: rgba(0, 200, 83, .12);
+            color: var(--green);
+            border: 1px solid rgba(0, 200, 83, .25)
+        }
+
+        .priv-disabled {
+            background: rgba(239, 68, 68, .1);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, .2)
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            z-index: 9999;
+            max-width: 320px;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all .25s var(--ease);
+            pointer-events: none
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0)
+        }
+
+        .toast-success {
+            background: rgba(0, 200, 83, .97);
+            border: 1px solid #00b96b;
+            color: #fff
+        }
+
+        .toast-error {
+            background: rgba(239, 68, 68, .97);
+            border: 1px solid #ef4444;
+            color: #fff
+        }
+
+        .toast-info {
+            background: rgba(26, 111, 212, .97);
+            border: 1px solid #1a6fd4;
+            color: #fff
+        }
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <div style="display:flex">
+        <div id="overlay" onclick="closeMob()"
+            style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.5)"></div>
+
+        <!-- SIDEBAR -->
+        <aside class="csb collapsed" id="csb">
+            <div class="csb-brand">
+                <div class="sb-brand-icon" style="background:none;box-shadow:none;"><img src="logo.png" width="32" height="32" alt="Logo"></div>
+                <div class="sb-brand-text">
+                    <div class="cb-name">SolarTrack Pro</div>
+                    <div class="cb-sub">TNPDCL Net Metering</div>
+                </div>
+            </div>
+            <div class="csb-user">
+                <div class="csb-av">👤</div>
+                <div class="sb-user-text">
+                    <div class="sb-uname" id="sb-uname">Consumer</div>
+                    <div class="sb-urole">Solar Consumer</div>
+                </div>
+            </div>
+            <nav class="csb-nav">
+                <div class="sb-label">My Dashboard</div>
+                <div class="snav-item" onclick="goTo('dashboard.html')"><span class="sni-icon">🏠</span><span
+                        class="sni-label">Overview</span></div>
+                <div class="sb-label">My Energy</div>
+                <div class="snav-item" onclick="goTo('dashboard.html')"><span class="sni-icon">☀</span><span
+                        class="sni-label">Solar Generation</span></div>
+                <div class="snav-item" onclick="goTo('dashboard.html')"><span class="sni-icon">⚡</span><span
+                        class="sni-label">Grid Export / Import</span></div>
+                <div class="snav-item" onclick="goTo('dashboard.html')"><span class="sni-icon">🔋</span><span
+                        class="sni-label">Battery Status</span></div>
+                <div class="sb-label">Billing</div>
+                <div class="snav-item" onclick="goTo('dashboard.html')"><span class="sni-icon">🧾</span><span
+                        class="sni-label">My Bills</span></div>
+                <div class="sb-label">Account</div>
+                <div class="snav-item" onclick="goTo('consumer-profile.html')"><span class="sni-icon">👤</span><span
+                        class="sni-label">My Profile</span></div>
+                <div class="snav-item active"><span class="sni-icon">⚙</span><span class="sni-label">Settings</span>
+                </div>
+                <div class="snav-item" onclick="authLogout(true)"><span class="sni-icon">🚪</span><span
+                        class="sni-label">Logout</span></div>
+            </nav>
+            <div class="csb-foot">
+                <div class="sb-foot-txt">Tamil Nadu Power Distribution<br>Corporation Ltd. — Solar Division<br><span
+                        id="sb-date" style="color:var(--green);font-weight:600"></span></div>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <div class="cmain sb-col" id="cmain">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="hbg" id="hbg" onclick="toggleSB()"><span></span><span></span><span></span></div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="logo.png" width="36" height="36" alt="Logo" style="filter: drop-shadow(0 0 8px rgba(0,185,107,0.3)); flex-shrink:0" />
+                        <div>
+                            <div class="pg-title">Settings</div>
+                            <div class="pg-bc"><a href="index.html" style="color:inherit;text-decoration:none;">Home</a> › Consumer Portal › <a href="consumer-settings.html" style="color:inherit;text-decoration:none;">Settings</a></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="back-btn" onclick="goTo('dashboard.html')">← Dashboard</button>
+                    <button class="tb-logout" onclick="authLogout(true)">🚪 Logout</button>
+                </div>
+            </header>
+
+            <div class="page-body">
+
+                <!-- CHANGE PASSWORD -->
+                <div class="section-hd">🔐 Change Password</div>
+                <div class="card">
+                    <div class="card-title">🔑 Update Password</div>
+                    <form id="pw-form" onsubmit="changePassword(event)">
+                        <div class="form-grid">
+                            <div class="fg full"><label>Current Password</label><input type="password" id="pw-cur"
+                                    placeholder="Enter current password" /></div>
+                            <div class="fg"><label>New Password</label><input type="password" id="pw-new"
+                                    placeholder="Min. 8 characters" /></div>
+                            <div class="fg"><label>Confirm New Password</label><input type="password" id="pw-conf"
+                                    placeholder="Repeat new password" /></div>
+                        </div>
+                        <div class="btn-row"><button type="submit" class="btn-primary">🔒 Update Password</button></div>
+                    </form>
+                </div>
+
+                <!-- NOTIFICATION SETTINGS -->
+                <div class="section-hd">🔔 Notification Settings</div>
+                <div class="card">
+                    <div class="card-title">📣 Manage Notifications</div>
+                    <div class="setting-row">
+                        <div class="sr-left">
+                            <div class="sr-title">Bill Due Reminders</div>
+                            <div class="sr-desc">Get notified 7 days before your EB bill due date</div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="notif-bill" checked
+                                onchange="saveSettings()"><span class="slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="sr-left">
+                            <div class="sr-title">Solar Generation Alerts</div>
+                            <div class="sr-desc">Notify when generation drops below threshold</div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="notif-gen" checked
+                                onchange="saveSettings()"><span class="slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="sr-left">
+                            <div class="sr-title">Battery Overflow Alerts</div>
+                            <div class="sr-desc">Alert when 10 kWh battery is fully charged</div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="notif-bat" checked
+                                onchange="saveSettings()"><span class="slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="sr-left">
+                            <div class="sr-title">Monthly Report Email</div>
+                            <div class="sr-desc">Receive monthly energy summary via email</div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="notif-report" onchange="saveSettings()"><span
+                                class="slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="sr-left">
+                            <div class="sr-title">System Maintenance Alerts</div>
+                            <div class="sr-desc">Notify about scheduled TNPDCL maintenance</div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="notif-maint" onchange="saveSettings()"><span
+                                class="slider"></span></label>
+                    </div>
+                </div>
+
+                <!-- APPEARANCE -->
+                <div class="section-hd">🎨 Appearance</div>
+                <div class="card">
+                    <div class="card-title">🌓 Display Settings</div>
+                    <div class="setting-row">
+                        <div class="sr-left">
+                            <div class="sr-title">Dark Mode</div>
+                            <div class="sr-desc">Use dark background across the dashboard (default: enabled)</div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="dark-mode" checked
+                                onchange="toggleDarkMode()"><span class="slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="sr-left">
+                            <div class="sr-title">Language</div>
+                            <div class="sr-desc">Select your preferred display language</div>
+                        </div>
+                        <select class="sr-select" id="lang-select" onchange="saveSettings()">
+                            <option value="en">English</option>
+                            <option value="ta">தமிழ் (Tamil)</option>
+                            <option value="hi">हिन्दी (Hindi)</option>
+                            <option value="te">తెలుగు (Telugu)</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <div class="sr-left">
+                            <div class="sr-title">Energy Unit Display</div>
+                            <div class="sr-desc">Switch between kWh and MWh for large values</div>
+                        </div>
+                        <select class="sr-select" id="unit-select" onchange="saveSettings()">
+                            <option value="kwh">kWh (Kilowatt-hour)</option>
+                            <option value="mwh">MWh (Megawatt-hour)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- PRIVACY -->
+                <div class="section-hd">🔏 Privacy Settings</div>
+                <div class="card">
+                    <div class="card-title">🛡 Data & Privacy</div>
+                    <div class="priv-item"><span class="priv-lbl">Data shared with TNPDCL (required)</span><span
+                            class="priv-status priv-enabled">Always On</span></div>
+                    <div class="priv-item"><span class="priv-lbl">Anonymous analytics for platform improvement</span>
+                        <label class="toggle" style="flex-shrink:0"><input type="checkbox" id="priv-analytics"
+                                onchange="saveSettings()"><span class="slider"></span></label>
+                    </div>
+                    <div class="priv-item"><span class="priv-lbl">Share usage statistics with solar vendors</span>
+                        <label class="toggle" style="flex-shrink:0"><input type="checkbox" id="priv-vendor"
+                                onchange="saveSettings()"><span class="slider"></span></label>
+                    </div>
+                    <div class="priv-item"><span class="priv-lbl">Session timeout (auto logout after inactivity)</span>
+                        <select class="sr-select" id="priv-timeout" onchange="saveSettings()">
+                            <option value="30">30 minutes</option>
+                            <option value="60" selected>1 hour</option>
+                            <option value="120">2 hours</option>
+                            <option value="0">Never</option>
+                        </select>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn-secondary"
+                            onclick="toast('Data export request sent to admin@solartrack-pro.com','info')">📤 Export My
+                            Data</button>
+                        <button class="btn-danger" onclick="confirmDelete()">🗑 Delete Account</button>
+                    </div>
+                </div>
+
+                <!-- LOGOUT -->
+                <div class="section-hd">🚪 Session</div>
+                <div class="card">
+                    <div class="card-title">🔑 Active Session</div>
+                    <div class="setting-row">
+                        <div class="sr-left">
+                            <div class="sr-title">Logged in as: <span id="sess-user"
+                                    style="color:var(--green);font-family:'Roboto Mono',monospace;font-size:12px">—</span>
+                            </div>
+                            <div class="sr-desc" id="sess-time">Session active since: —</div>
+                        </div>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn-danger" onclick="authLogout(true)">🚪 Logout Now</button>
+                        <button class="btn-secondary" onclick="authLogout(true)">🔄 Switch Account</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+    <script>
+        /* ── Role guard ── */
+        let SESSION;
+        try { SESSION = requireAuth('consumer'); }
+        catch (e) { SESSION = null; }
+
+        if (SESSION) {
+            document.getElementById('sb-uname').textContent = SESSION.name;
+            document.getElementById('sess-user').textContent = SESSION.username;
+            document.getElementById('sess-time').textContent = 'Session active since: ' + new Date(SESSION.loginAt || Date.now()).toLocaleString('en-IN');
+        }
+
+        /* ── Sidebar ── */
+        const csb = document.getElementById('csb'), cmain = document.getElementById('cmain'), hbg = document.getElementById('hbg'), ov = document.getElementById('overlay');
+        let sbOpen = false;
+        const mob = () => window.innerWidth <= 768;
+        function toggleSB() { if (mob()) { sbOpen = !sbOpen; csb.classList.toggle('mob-open', sbOpen); ov.style.display = sbOpen ? 'block' : 'none'; csb.classList.remove('collapsed'); hbg.classList.toggle('open', sbOpen); } else { sbOpen = !sbOpen; csb.classList.toggle('collapsed', !sbOpen); cmain.classList.toggle('sb-col', !sbOpen); hbg.classList.toggle('open', sbOpen); } }
+        function closeMob() { sbOpen = false; csb.classList.remove('mob-open'); ov.style.display = 'none'; hbg.classList.remove('open'); }
+        function goTo(url) { document.body.style.transition = 'opacity .3s'; document.body.style.opacity = '0'; setTimeout(() => window.location.href = url, 320); }
+
+        /* ── Date ── */
+        setInterval(() => { document.getElementById('sb-date').textContent = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }, 1000);
+        document.getElementById('sb-date').textContent = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        /* ── Load settings ── */
+        const SETTINGS_KEY = 'solar_settings_' + (SESSION ? SESSION.username : 'guest');
+        function loadSettings() {
+            const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+            if (s.notifBill !== undefined) document.getElementById('notif-bill').checked = s.notifBill;
+            if (s.notifGen !== undefined) document.getElementById('notif-gen').checked = s.notifGen;
+            if (s.notifBat !== undefined) document.getElementById('notif-bat').checked = s.notifBat;
+            if (s.notifReport !== undefined) document.getElementById('notif-report').checked = s.notifReport;
+            if (s.notifMaint !== undefined) document.getElementById('notif-maint').checked = s.notifMaint;
+            if (s.darkMode !== undefined) document.getElementById('dark-mode').checked = s.darkMode;
+            if (s.lang) document.getElementById('lang-select').value = s.lang;
+            if (s.unit) document.getElementById('unit-select').value = s.unit;
+            if (s.analytics !== undefined) document.getElementById('priv-analytics').checked = s.analytics;
+            if (s.vendor !== undefined) document.getElementById('priv-vendor').checked = s.vendor;
+            if (s.timeout) document.getElementById('priv-timeout').value = s.timeout;
+        }
+        loadSettings();
+
+        function saveSettings() {
+            const s = {
+                notifBill: document.getElementById('notif-bill').checked,
+                notifGen: document.getElementById('notif-gen').checked,
+                notifBat: document.getElementById('notif-bat').checked,
+                notifReport: document.getElementById('notif-report').checked,
+                notifMaint: document.getElementById('notif-maint').checked,
+                darkMode: document.getElementById('dark-mode').checked,
+                lang: document.getElementById('lang-select').value,
+                unit: document.getElementById('unit-select').value,
+                analytics: document.getElementById('priv-analytics').checked,
+                vendor: document.getElementById('priv-vendor').checked,
+                timeout: document.getElementById('priv-timeout').value,
+            };
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+            toast('✅ Settings saved!', 'success');
+        }
+
+        /* ── Dark mode toggle ── */
+        function toggleDarkMode() {
+            // In a full implementation this would switch themes; for now just save
+            saveSettings();
+        }
+
+        /* ── Change password ── */
+        function changePassword(e) {
+            e.preventDefault();
+            const cur = document.getElementById('pw-cur').value;
+            const nw = document.getElementById('pw-new').value;
+            const conf = document.getElementById('pw-conf').value;
+            [document.getElementById('pw-cur'), document.getElementById('pw-new'), document.getElementById('pw-conf')].forEach(i => i.classList.remove('error'));
+            if (!cur) { document.getElementById('pw-cur').classList.add('error'); toast('Please enter current password.', 'error'); return; }
+            if (!SESSION) { toast('Not logged in.', 'error'); return; }
+            // Simple check — in production use Firebase Auth
+            const known = { akaash: 'solar123', kumar: 'solar456', admin: 'admin123' };
+            if (known[SESSION.username] !== cur) { document.getElementById('pw-cur').classList.add('error'); toast('⚠ Current password is incorrect.', 'error'); return; }
+            if (nw.length < 8) { document.getElementById('pw-new').classList.add('error'); toast('⚠ New password must be at least 8 characters.', 'error'); return; }
+            if (nw !== conf) { document.getElementById('pw-conf').classList.add('error'); toast('⚠ Passwords do not match.', 'error'); return; }
+            document.getElementById('pw-form').reset();
+            toast('✅ Password updated successfully! Please re-login.', 'success');
+            setTimeout(() => authLogout(), 2400);
+        }
+
+        /* ── Delete account confirm ── */
+        function confirmDelete() {
+            showConfirm({
+                title: "🗑 Delete Account",
+                body: "Are you sure you want to delete your account? This action cannot be undone and you will lose access to all your solar history data.",
+                confirmText: "Request Deletion",
+                onConfirm: () => {
+                    toast('📧 Deletion request sent to TNPDCL admin. You will be contacted within 48 hours.', 'info');
+                }
+            });
+        }
+
+
+        /* ── Toast ── */
+        function toast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.className = `toast toast-${type} show`;
+            setTimeout(() => t.classList.remove('show'), 3400);
+        }
+    </script>
+</body>
+
+</html>

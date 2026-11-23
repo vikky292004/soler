@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Bill Payment QR — SolarTrack Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="consumer-sidebar.css" />
+    <style>
+        :root { --green: #00C853; --gold: #FFC107; }
+        body { animation: fi .4s ease }
+        @keyframes fi { from { opacity:0 } to { opacity:1 } }
+
+        .page-body { padding: 24px; flex: 1 }
+
+        .section-hd {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px;
+            text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 16px
+        }
+        .section-hd::after { content:''; flex:1; height:1px; background:rgba(255,255,255,.07) }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            align-items: flex-start;
+        }
+        @media(max-width:800px) { .main-grid { grid-template-columns: 1fr } }
+
+        /* ── QR Card ── */
+        .qr-card {
+            background: rgba(15,30,55,.9);
+            border: 1px solid rgba(0,200,83,.25);
+            border-radius: 20px;
+            padding: 28px 24px;
+            display: flex; flex-direction: column; align-items: center; gap: 14px;
+            text-align: center;
+        }
+        .qr-label { font-size: 13px; font-weight: 800; color: #fff }
+        .qr-upi   { font-size: 11px; color: var(--green); font-family:'Roboto Mono',monospace }
+        .qr-box   {
+            background: #fff; border-radius: 14px; padding: 12px;
+            box-shadow: 0 0 32px rgba(0,200,83,.3);
+        }
+        .qr-amt   { font-size: 26px; font-weight: 900; color: var(--gold) }
+        .qr-note  { font-size: 10px; color: rgba(255,255,255,.4); max-width: 200px }
+        .btn-dl {
+            width: 100%; padding: 11px; border-radius: 10px; border: none;
+            background: linear-gradient(135deg,#00C853,#00b96b);
+            color: #fff; font-size: 13px; font-weight: 700;
+            font-family: 'Inter',sans-serif; cursor: pointer;
+            box-shadow: 0 3px 14px rgba(0,200,83,.3); transition: all .25s
+        }
+        .btn-dl:hover { transform: translateY(-2px) }
+
+        /* ── Bill Card ── */
+        .bill-card {
+            background: rgba(15,30,55,.85);
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 20px; padding: 24px
+        }
+        .bc-title { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 18px }
+        .bc-row {
+            display: flex; justify-content: space-between;
+            padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 13px
+        }
+        .bc-row:last-child { border-bottom: none; font-weight: 800 }
+        .bc-lbl { color: rgba(255,255,255,.45) }
+        .bc-val { color: #f0f4ff; font-weight: 600 }
+
+        /* ── How to pay card ── */
+        .how-card {
+            background: rgba(15,30,55,.85);
+            border: 1px solid rgba(0,200,83,.15);
+            border-radius: 16px; padding: 20px; margin-top: 20px
+        }
+        .step { display:flex; gap:12px; align-items:flex-start; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.04) }
+        .step:last-child { border-bottom: none }
+        .step-n {
+            width:26px; height:26px; border-radius:50%;
+            background: linear-gradient(135deg,#00C853,#00b96b);
+            display:flex; align-items:center; justify-content:center;
+            font-size:11px; font-weight:800; color:#fff; flex-shrink:0
+        }
+        .step-t { font-size:12.5px; color:rgba(255,255,255,.6); padding-top:3px; line-height:1.5 }
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+<div style="display:flex">
+    <div id="overlay" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.5)"></div>
+    <aside class="csb collapsed" id="csb"></aside>
+    <div class="cmain sb-col" id="cmain">
+        <header class="topbar">
+            <div class="topbar-left">
+                <div class="hbg" id="hbg"><span></span><span></span><span></span></div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <img src="logo.png" width="36" height="36" alt="Logo" style="filter:drop-shadow(0 0 8px rgba(0,185,107,0.3));flex-shrink:0" />
+                    <div>
+                        <div class="pg-title">📱 Scan QR &amp; Pay</div>
+                        <div class="pg-bc"><a href="index.html" style="color:inherit;text-decoration:none;">Home</a> › Billing › <a href="consumer-qr.html" style="color:inherit;text-decoration:none;">Scan QR Code</a></div>
+                    </div>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <button class="tb-logout" onclick="authLogout()">🚪 Logout</button>
+            </div>
+        </header>
+
+        <div class="page-body">
+            <div class="section-hd">📱 UPI Payment QR — Current Month</div>
+
+            <div class="main-grid">
+                <!-- LEFT: QR Code -->
+                <div class="qr-card">
+                    <div class="qr-label">🧾 TNPDCL Net Metering</div>
+                    <div class="qr-upi" id="qr-snum">—</div>
+                    <div class="qr-box" id="qr-container"></div>
+                    <div class="qr-amt" id="qr-amt">₹ —</div>
+                    <div class="qr-upi">UPI: tangedco@sbi</div>
+                    <div class="qr-note">📷 Open Camera App → point at QR → tap link to pay</div>
+                    <button class="btn-dl" onclick="downloadQR()">⬇ Download QR</button>
+                </div>
+
+                <!-- RIGHT: Bill Detail + How to pay -->
+                <div>
+                    <div class="bill-card">
+                        <div class="bc-title">💡 May 2026 Bill Summary</div>
+                        <div class="bc-row"><span class="bc-lbl">Consumer</span><span class="bc-val" id="bd-name">—</span></div>
+                        <div class="bc-row"><span class="bc-lbl">Service No.</span><span class="bc-val" id="bd-snum" style="font-family:'Roboto Mono',monospace;font-size:12px;color:#5ba8f5">—</span></div>
+                        <div class="bc-row"><span class="bc-lbl">Billing Month</span><span class="bc-val" id="bd-month">—</span></div>
+                        <div class="bc-row"><span class="bc-lbl">Solar Generated</span><span class="bc-val" id="bd-gen" style="color:#00C853">—</span></div>
+                        <div class="bc-row"><span class="bc-lbl">Home Used</span><span class="bc-val" id="bd-used">—</span></div>
+                        <div class="bc-row"><span class="bc-lbl">Exported (Credit)</span><span class="bc-val" id="bd-sold" style="color:#00C853">—</span></div>
+                        <div class="bc-row"><span class="bc-lbl">EB Credit Earned</span><span class="bc-val" id="bd-earn" style="color:#00C853">—</span></div>
+                        <div class="bc-row">
+                            <span class="bc-lbl" style="color:#fff;font-size:14px;">💰 Net Amount</span>
+                            <span class="bc-val" style="color:#00C853;font-size:18px;" id="bd-net">—</span>
+                        </div>
+                    </div>
+
+                    <div class="how-card">
+                        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px;">📲 How to Pay via QR</div>
+                        <div class="step">
+                            <div class="step-n">1</div>
+                            <div class="step-t">Open your phone's <strong style="color:#fff">Camera App</strong> (not a UPI scanner).</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-n">2</div>
+                            <div class="step-t">Point camera at the QR code on the left and tap the link.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-n">3</div>
+                            <div class="step-t">Your UPI app opens with <strong style="color:#fff">TNPDCL (tangedco@sbi)</strong> prefilled.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-n">4</div>
+                            <div class="step-t">Enter amount, verify, and pay with your UPI PIN.</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-n">5</div>
+                            <div class="step-t">Keep the transaction receipt. Payment reflects within 24 hrs.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script src="script.js"></script>
+<script src="energy.js"></script>
+<script src="consumer-nav.js"></script>
+<script>
+    const UPI_ID   = 'tangedco@sbi';
+    const UPI_NAME = 'TNPDCL%20Net%20Metering';
+
+    let SESSION;
+    try { SESSION = requireAuth('consumer'); } catch(e) { SESSION = null; }
+    document.addEventListener('DOMContentLoaded', () => { buildConsumerSidebar('qr'); initSidebarToggle(); });
+
+    function init() {
+        const name  = SESSION ? SESSION.name  : 'Consumer';
+        const snum  = SESSION ? SESSION.serviceNumber : 'TN0000000000';
+        const now   = new Date();
+        const ms    = ENERGY.getMonthSummary(
+            SESSION ? SESSION.username : 'guest',
+            `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+        );
+        const monthName = now.toLocaleString('en-IN', { month:'long', year:'numeric' });
+        const amount    = ms.netPayable.toFixed(2);
+        const ref       = 'TN' + snum.replace(/\D/g,'').slice(-6);
+
+        // Populate bill details
+        document.getElementById('qr-snum').textContent  = snum;
+        document.getElementById('qr-amt').textContent   = ENERGY.fmtINR(ms.netPayable);
+        document.getElementById('bd-name').textContent  = name;
+        document.getElementById('bd-snum').textContent  = snum;
+        document.getElementById('bd-month').textContent = monthName;
+        document.getElementById('bd-gen').textContent   = ENERGY.fmt(ms.totalGen)  + ' kWh';
+        document.getElementById('bd-used').textContent  = ENERGY.fmt(ms.totalUsed) + ' kWh';
+        document.getElementById('bd-sold').textContent  = ENERGY.fmt(ms.totalSold) + ' kWh';
+        document.getElementById('bd-earn').textContent  = ENERGY.fmtINR(ms.totalSavings);
+        document.getElementById('bd-net').textContent   = ENERGY.fmtINR(ms.netPayable);
+
+        // Generate UPI QR
+        const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${UPI_NAME}&tr=${ref}&am=${amount}&cu=INR&tn=Solar%20Bill%20Payment`;
+        try {
+            new QRCode(document.getElementById('qr-container'), {
+                text: upiUrl,
+                width: 200, height: 200,
+                colorDark: '#0a1a2e',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } catch(e) {
+            console.warn('QR render failed', e);
+        }
+    }
+
+    function downloadQR() {
+        const canvas = document.querySelector('#qr-container canvas');
+        if (!canvas) { alert('QR not ready yet.'); return; }
+        const a = document.createElement('a');
+        a.download = 'tnpdcl_upi_qr.png';
+        a.href = canvas.toDataURL();
+        a.click();
+    }
+
+    init();
+</script>
+</body>
+</html>
